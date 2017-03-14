@@ -31,6 +31,10 @@ namespace TheHoloRefiner
 			m_Bridge = new WinRTBridge.WinRTBridge();
 			m_AppCallbacks.SetBridge(m_Bridge);
 
+            var nativeObject = new NativeRefinerComponent.NativeRefiner();
+            //nativeObject.addPicture()
+
+
 			m_AppCallbacks.SetCoreApplicationViewEvents(applicationView);
 		}
 
@@ -71,6 +75,7 @@ namespace TheHoloRefiner
 
 		public void Uninitialize()
 		{
+
 		}
 
 		[MTAThread]
