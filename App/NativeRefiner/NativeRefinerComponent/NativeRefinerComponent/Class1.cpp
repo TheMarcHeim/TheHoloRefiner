@@ -29,6 +29,11 @@ void NativeRefinerComponent::NativeRefiner::addPicture(Platform::String^ path, W
 	throw ref new Platform::NotImplementedException();
 }
 
+void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String ^ path)
+{
+	throw ref new Platform::NotImplementedException();
+}
+
 Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ NativeRefinerComponent::NativeRefiner::Refine()
 {
 	//maybe we use this later with events:
@@ -37,7 +42,6 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 
 	throw ref new Platform::NotImplementedException();
 	
-
 	//async task
 	return create_async([this](progress_reporter<double> reporter)-> Platform::String^ {
 		//do the refining

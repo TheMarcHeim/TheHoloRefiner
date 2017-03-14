@@ -14,16 +14,27 @@ namespace NativeRefinerComponent
     public:
 		NativeRefiner();
 
-		//delete pictures
+		/// <summary>
+		/// delete pictures
+		/// </summary>
 		void reset();
 
-		//add a calibrated image 
-		//the following can be acquired from the SDK
+		/// <summary>
+		/// add a calibrated image 
+		/// the following can be acquired from the SDK
+		/// </summary>
 		void addPicture(Platform::String^ path,//file path to images
 			Windows::Foundation::Numerics::float4x4 CameraViewTransform,//Stores the camera's extrinsic transform in the coordinate system
 			Windows::Foundation::Numerics::float4x4 CameraProjectionTransform);//Stores the camera's projection transform
 
-		//Async task that processes the
+		/// <summary>
+		/// add initial model in specified file format---> https://github.com/TheMarcHeim/TheHoloRefiner/wiki/Mesh-file-format
+		/// </summary>
+		void addInitModel(Platform::String^ path);
+
+		/// <summary>
+		/// Async task that refines the 
+		/// </summary>
 		Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Refine();
 
     };

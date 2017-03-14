@@ -32,7 +32,7 @@ namespace TheHoloRefiner
 			m_AppCallbacks.SetBridge(m_Bridge);
 
             var nativeObject = new NativeRefinerComponent.NativeRefiner();
-            //nativeObject.addPicture()
+            nativeObject.reset();
 
 
 			m_AppCallbacks.SetCoreApplicationViewEvents(applicationView);
