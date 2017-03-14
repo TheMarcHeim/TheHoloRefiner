@@ -6,7 +6,7 @@ using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using UnityPlayer;
 
-namespace HoloRefiner
+namespace TheHoloRefiner
 {
 	class App : IFrameworkView, IFrameworkViewSource
 	{
