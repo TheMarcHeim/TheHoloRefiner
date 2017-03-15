@@ -14,6 +14,21 @@ namespace NativeRefinerComponent
     public:
 		NativeRefiner();
 
+		//usage in c#:
+		//first:
+		//var refiner = new NativerRefinerComponent.NativeRefiner();
+		//refiner.reset();
+		//for all images:
+		//	refiner.addpicture(path, CameraViewTransform, CameraProjectionTransform);
+		//refiner.addInitModel(path)
+		//var asyncOp = refiner.Refine()
+		///lambda for progress
+		//asyncOp.Progress = (asyncInfo, progress) =>
+		//	{do UI update of progress bar};
+		//var async pathOfRefinedMesh = await asyncOp
+
+
+
 		/// <summary>
 		/// delete pictures
 		/// </summary>
