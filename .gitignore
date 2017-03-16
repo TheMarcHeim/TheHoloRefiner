@@ -260,3 +260,5 @@ sysinfo.txt
 *.unitypackage
 App/TheHoloRefiner.VC.db
 App/NativeRefiner/NativeRefinerComponent/NativeRefinerComponent.VC.db
+*.db
+App/NativeRefiner/NativeRefinerComponent/NativeRefinerComponent.VC.db
