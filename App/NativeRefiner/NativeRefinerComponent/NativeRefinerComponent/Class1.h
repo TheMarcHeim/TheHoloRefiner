@@ -5,6 +5,7 @@
 #include <amp.h>
 #include <amp_math.h>
 #include <windows.foundation.numerics.h>
+#include <ModelRepresentation.h>
 
 
 namespace NativeRefinerComponent
@@ -52,5 +53,9 @@ namespace NativeRefinerComponent
 		/// Async task that refines the 
 		/// </summary>
 		Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Refine();
+
+
+	private:
+
     };
 }

@@ -9,9 +9,12 @@
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Class1.cpp" />
+    <ClCompile Include="ModelRepresentation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class1.h" />
+    <ClInclude Include="ModelRepresentation.h" />
+    <ClInclude Include="..\syoyo-tinyobjloader-9d9e987\tiny_obj_loader.h" />
   </ItemGroup>
 </Project>
