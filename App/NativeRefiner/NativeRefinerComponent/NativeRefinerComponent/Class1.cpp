@@ -39,8 +39,6 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 	//maybe we use this later with events:
 	//auto window = Windows::UI::Core::CoreWindow::GetForCurrentThread();
 	//m_dispatcher = window->Dispatcher;
-
-	throw ref new Platform::NotImplementedException();
 	
 	//async task
 	return create_async([this](progress_reporter<double> reporter)-> Platform::String^ {

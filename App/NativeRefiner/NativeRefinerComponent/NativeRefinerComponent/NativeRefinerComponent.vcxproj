@@ -212,10 +212,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\syoyo-tinyobjloader-9d9e987\tiny_obj_loader.h" />
     <ClInclude Include="ModelRepresentation.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class1.h" />
+    <ClInclude Include="tiny_obj_loader.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ModelRepresentation.cpp" />
