@@ -5,14 +5,14 @@
 # Write a line equal to 'overwrite-all' (without quotes) to overwrite everything (preserved accross builds)
 # Write a line equal to 'keep-all' (without quotes) to keep files regardless their modification (preserved accross builds)
 # Default behavior is to never overwrite files
-TheHoloRefiner.sln: 376571896FAB5A4D6A130C10DFC654E6
+TheHoloRefiner.sln: modified
 GeneratedProjects\UWP\Assembly-CSharp\project.json: 4FCF72A4D5EDB37E24C206A7BCFE7AF1
 GeneratedProjects\UWP\Assembly-CSharp-firstpass\project.json: 4FCF72A4D5EDB37E24C206A7BCFE7AF1
-TheHoloRefiner\App.cs: 7F8F1CE5ED3E2C60400E8AD62C3D292C
-TheHoloRefiner\Package.appxmanifest: 860C3040F32ECF24C96BF13D53932811
+TheHoloRefiner\App.cs: modified
+TheHoloRefiner\Package.appxmanifest: modified
 TheHoloRefiner\project.json: 1D02BC64BAC0D041019673A1C4C51737
-TheHoloRefiner\TheHoloRefiner.csproj: B4D03DF852A31BA72F15D90967272079
-TheHoloRefiner\TheHoloRefiner.csproj.user: BEFB8AC4886C4CFDD3C68445D6F19B04
+TheHoloRefiner\TheHoloRefiner.csproj: modified
+TheHoloRefiner\TheHoloRefiner.csproj.user: modified
 TheHoloRefiner\Assets\SplashScreen.scale-200.png: 60618416282ED104FD1473935716045D
 TheHoloRefiner\Assets\Square150x150Logo.scale-200.png: E02834B4A5DFB97FF8E212C1CACBB084
 TheHoloRefiner\Assets\Square44x44Logo.scale-200.png: 6C6EF27184ABE9D870A9D564953775DE

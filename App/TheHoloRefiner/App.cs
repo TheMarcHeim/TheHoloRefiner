@@ -32,6 +32,8 @@ namespace TheHoloRefiner
 			m_AppCallbacks.SetBridge(m_Bridge);
 
 			m_AppCallbacks.SetCoreApplicationViewEvents(applicationView);
+
+            //NativeRefinerComponent.
 		}
 
 		/// <summary>

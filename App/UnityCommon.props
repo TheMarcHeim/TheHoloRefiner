@@ -2,9 +2,9 @@
     <PropertyGroup>
         <UnityInstallationDir>C:\Program Files\Unity\Editor\</UnityInstallationDir>
         <UnityWSASolutionName>TheHoloRefiner</UnityWSASolutionName>
-        <UnityWSASolutionDir>D:\Source\TheHoloRefiner\App\</UnityWSASolutionDir>
+        <UnityWSASolutionDir>D:\Source\Repos\TheHoloRefiner\App\</UnityWSASolutionDir>
         <UnityWSAPlayerDir>C:\Program Files\Unity\Editor\Data\PlaybackEngines\MetroSupport\</UnityWSAPlayerDir>
         <UnityWSAToolsDir>$(UnityWSASolutionDir)Unity\Tools\</UnityWSAToolsDir>
-        <UnityProjectDir>D:\Source\TheHoloRefiner\</UnityProjectDir>
+        <UnityProjectDir>D:\Source\Repos\TheHoloRefiner\</UnityProjectDir>
     </PropertyGroup>
 </Project>
