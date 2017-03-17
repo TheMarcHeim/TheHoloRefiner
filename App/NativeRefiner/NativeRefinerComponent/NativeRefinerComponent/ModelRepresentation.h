@@ -2,23 +2,26 @@
 
 #include<vector>
 #include<string>
-#include "tiny_obj_loader.h"
+#include<Eigen/Dense>
 
 //use this for internal representation
 namespace modelRep {
 	//triangle
 	struct Triangle
 	{
-		int t0, t1, t2;
+		Eigen::Vector3d* t0;
+		Eigen::Vector3d* t1;
+		Eigen::Vector3d* t2;
 	};
-	ref class ModelRepresentation sealed
+	class ModelRepresentation
 	{
 	public:
 		ModelRepresentation();
-
-	private:
-		std::vector<Eigen::Vector2d> vertices;
-		std::vector<Triangle> triangles;
+		~ModelRepresentation();
 		bool loadFile(std::string path);
+		int nTriang;
+	private:
+		Eigen::Vector3d* vertices;
+		std::vector<Triangle> triangles;
 	};
 }

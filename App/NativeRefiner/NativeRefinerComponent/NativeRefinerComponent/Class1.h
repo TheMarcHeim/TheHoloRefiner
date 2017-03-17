@@ -5,7 +5,8 @@
 #include <amp.h>
 #include <amp_math.h>
 #include <windows.foundation.numerics.h>
-#include <ModelRepresentation.h>
+#include "ModelRepresentation.h"
+#include <string>
 
 
 namespace NativeRefinerComponent
@@ -54,8 +55,9 @@ namespace NativeRefinerComponent
 		/// </summary>
 		Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Refine();
 
+		int getSize();
 
 	private:
-
+		modelRep::ModelRepresentation model;
     };
 }

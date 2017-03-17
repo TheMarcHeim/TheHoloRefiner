@@ -4,6 +4,7 @@
 #include <ppltasks.h>
 #include <concurrent_vector.h>
 
+
 using namespace NativeRefinerComponent;
 using namespace Platform;
 using namespace concurrency;
@@ -11,6 +12,7 @@ using namespace Platform::Collections;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::Foundation;
 using namespace Windows::UI::Core;
+
 
 
 
@@ -29,9 +31,13 @@ void NativeRefinerComponent::NativeRefiner::addPicture(Platform::String^ path, W
 	throw ref new Platform::NotImplementedException();
 }
 
-void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String ^ path)
+void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String^ path)
 {
-	throw ref new Platform::NotImplementedException();
+	//convert from managed string :/
+	std::wstring fooW(path->Begin());
+	std::string upath(fooW.begin(), fooW.end());
+	//model.loadFile(upath);
+	model.loadFile("D:\\testModels\\cubeobj.obj");
 }
 
 Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ NativeRefinerComponent::NativeRefiner::Refine()
@@ -52,4 +58,8 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 	});
 
 
+}
+
+int NativeRefinerComponent::NativeRefiner::getSize() {
+	return model.nTriang;
 }
