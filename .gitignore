@@ -212,12 +212,11 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 
-/[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
-/Assets/AssetStoreTools*
+/Library/ShaderCache
 
 # Visual Studio 2015 cache directory
 # /.vs/
@@ -441,12 +440,10 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 
-/[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
-/Assets/AssetStoreTools*
 
 # Visual Studio 2015 cache directory
 /.vs/
@@ -670,12 +667,10 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 
-/[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
-/Assets/AssetStoreTools*
 
 # Visual Studio 2015 cache directory
 /.vs/
