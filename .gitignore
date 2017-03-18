@@ -14,13 +14,9 @@ Library/
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
 [Rr]eleases/
-x64/
-x86/
 build/
 bld/
-[Bb]in/
 [Oo]bj/
 
 # Visual Studio 2015 cache/options directory
@@ -42,32 +38,6 @@ dlldata.c
 # DNX
 project.lock.json
 artifacts/
-
-*_i.c
-*_p.c
-*_i.h
-*.ilk
-*.meta
-*.obj
-*.pch
-*.pdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*.log
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
-*.dll
 
 # Chutzpah Test files
 _Chutzpah*
@@ -239,16 +209,7 @@ ipch/
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-build/
-bld/
-[Bb]in/
+
 [Oo]bj/
 
 # Visual Studio 2015 cache/options directory
@@ -295,7 +256,6 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
-*.dll
 
 # Chutzpah Test files
 _Chutzpah*
@@ -469,13 +429,9 @@ ipch/
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
 [Rr]eleases/
-x64/
-x86/
 build/
 bld/
-[Bb]in/
 [Oo]bj/
 
 # Visual Studio 2015 cache/options directory
@@ -522,7 +478,7 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
-*.dll
+
 
 # Chutzpah Test files
 _Chutzpah*
