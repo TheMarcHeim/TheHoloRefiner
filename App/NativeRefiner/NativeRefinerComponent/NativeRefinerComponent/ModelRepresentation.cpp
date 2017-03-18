@@ -25,6 +25,8 @@ bool modelRep::ModelRepresentation::loadFile(std::string path)
 	std::string mtl_basedir = "";
 	tinyobj::attrib_t attrib;
 	std::string err;
+
+
 	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str(), nullptr, true);
 	
 	//if we do not have exactly one shape exit
