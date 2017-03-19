@@ -36,8 +36,8 @@ void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String^ path)
 	//convert from managed string :/
 	std::wstring fooW(path->Begin());
 	std::string upath(fooW.begin(), fooW.end());
-	//model.loadFile(upath);
-	model.loadFile("D:\\testModels\\cubeobj.obj");
+	model.loadFile(upath);
+	//model.loadFile("D:\\testModels\\cubeobj.obj");
 }
 
 Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ NativeRefinerComponent::NativeRefiner::Refine()
