@@ -28,7 +28,12 @@ void NativeRefinerComponent::NativeRefiner::reset()
 
 void NativeRefinerComponent::NativeRefiner::addPicture(Platform::String^ path, Windows::Foundation::Numerics::float4x4 CameraViewTransform, Windows::Foundation::Numerics::float4x4 CameraProjectionTransform)
 {
-	throw ref new Platform::NotImplementedException();
+	//convert from managed string :/
+	std::wstring fooW(path->Begin());
+	std::string upath(fooW.begin(), fooW.end());
+	//add new image
+	images.push_back(
+		imageRep::ImageRepresentation(upath, CameraViewTransform, CameraProjectionTransform));
 }
 
 void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String^ path)
@@ -37,7 +42,7 @@ void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String^ path)
 	std::wstring fooW(path->Begin());
 	std::string upath(fooW.begin(), fooW.end());
 	model.loadFile(upath);
-	//model.loadFile("D:\\testModels\\cubeobj.obj");
+
 }
 
 Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ NativeRefinerComponent::NativeRefiner::Refine()

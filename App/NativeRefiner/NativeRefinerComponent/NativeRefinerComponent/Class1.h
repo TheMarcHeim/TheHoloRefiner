@@ -6,6 +6,7 @@
 #include <amp_math.h>
 #include <windows.foundation.numerics.h>
 #include "ModelRepresentation.h"
+#include "ImageRepresentation.h"
 #include <string>
 
 
@@ -59,5 +60,6 @@ namespace NativeRefinerComponent
 
 	private:
 		modelRep::ModelRepresentation model;
-    };
+		std::vector<imageRep::ImageRepresentation> images;
+	};
 }

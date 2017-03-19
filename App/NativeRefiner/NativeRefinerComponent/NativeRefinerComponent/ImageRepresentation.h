@@ -1,13 +1,19 @@
 #pragma once
-#include <afxstr.h>
-#include <atlimage.h>
 #include <string>
+#include <vector>
+#include "lodepng.h"
+#include<Eigen/Dense>
 
-ref class ImageRepresentation sealed
-{
-public:
-	ImageRepresentation(std::string path);
-	CImage image;
-	
-};
-
+namespace imageRep {
+	class ImageRepresentation
+	{
+	public:
+		ImageRepresentation(std::string filename,
+			Windows::Foundation::Numerics::float4x4 pCameraViewTransform,
+			Windows::Foundation::Numerics::float4x4 pCameraProjectionTransform);
+		std::vector<unsigned char> image;
+		unsigned width, height;
+		Eigen::Matrix4f CameraViewTransform;
+		Eigen::Matrix4f CameraProjectionTransform;
+	};
+}

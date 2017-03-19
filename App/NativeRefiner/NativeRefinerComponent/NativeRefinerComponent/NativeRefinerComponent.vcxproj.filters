@@ -10,11 +10,15 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Class1.cpp" />
     <ClCompile Include="ModelRepresentation.cpp" />
+    <ClCompile Include="ImageRepresentation.cpp" />
+    <ClCompile Include="lodepng.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class1.h" />
     <ClInclude Include="ModelRepresentation.h" />
     <ClInclude Include="tiny_obj_loader.h" />
+    <ClInclude Include="ImageRepresentation.h" />
+    <ClInclude Include="lodepng.h" />
   </ItemGroup>
 </Project>
