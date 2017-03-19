@@ -25,6 +25,7 @@ BuildPlayer.prefs
 BuildSettings.asset
 DynamicsManager.asset
 EditorSettings.asset
+EditorUserSettings.asset
 EditorUserBuildSettings.asset
 expandedItems
 FailedAssetImports.txt
@@ -694,8 +695,5 @@ App/NativeRefiner/NativeRefinerComponent/NativeRefinerComponent/Release/NativeRe
 App/TheHoloRefiner.VC.db
 App/TheHoloRefiner.VC.db
 *.db
-Library/AnnotationManager
+Library/LastBuild.buildreport
 Library/CurrentLayout.dwlt
-Library/EditorUserSettings.asset
-*.buildreport
-Library/ScriptMapper
