@@ -68,3 +68,7 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 int NativeRefinerComponent::NativeRefiner::getSize() {
 	return model.nTriang;
 }
+
+int NativeRefinerComponent::NativeRefiner::getNImages() {
+	return images.size();
+}

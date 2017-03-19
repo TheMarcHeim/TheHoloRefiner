@@ -58,6 +58,8 @@ namespace NativeRefinerComponent
 
 		int getSize();
 
+		int getNImages();
+
 	private:
 		modelRep::ModelRepresentation model;
 		std::vector<imageRep::ImageRepresentation> images;

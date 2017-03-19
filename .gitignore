@@ -669,3 +669,5 @@ App/NativeRefiner/NativeRefinerComponent/NativeRefinerComponent/Release/NativeRe
 App/NativeRefiner/NativeRefinerComponent/NativeRefinerComponent/Release/NativeRe.b9895c02.tlog/CL.read.1.tlog
 *.db
 App/TheHoloRefiner.VC.db
+App/TheHoloRefiner.VC.db
+*.db
