@@ -1,2 +1,2 @@
-5.5.2f1:2.8.2.0
-WSAPlayer
+5.5.2f1:3.0.0.1
+StandaloneWindows
