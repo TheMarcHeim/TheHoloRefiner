@@ -24,15 +24,24 @@ namespace imageRep {
 		/// </summary>
 		Eigen::Vector2f imageSpaceGradientCompare(ImageRepresentation& otherImage, Eigen::Vector2f ownPos, Eigen::Vector2f otherPos, int patchSize);
 
+		/// <summary>
+		/// step that computes positions in image space 
+		/// </summary>
+		void setPositions(Eigen::MatrixXd V);
+
+		/// <summary>
+		/// step that computes positions in image space 
+		/// </summary>
+		void setPositions(Eigen::MatrixXd V);
 
 		const std::string filename;
 		std::vector<unsigned char> image;
 		cv::Mat ocvImage;
-
 		unsigned width, height;
 		Eigen::Matrix4f CameraViewTransform;
 		Eigen::Matrix4f CameraProjectionTransform;
-		
+		Eigen::Matrix<double, -1, 2> Vpos;
+
 	private:
 		cv::Mat dXImg;
 		cv::Mat dYImg;

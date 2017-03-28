@@ -57,3 +57,8 @@ Eigen::Vector2f imageRep::ImageRepresentation::imageSpaceGradientCompare(ImageRe
 		-XXX.at<float>(0,0),
 		-YYY.at<float>(0,0));
 }
+
+void imageRep::ImageRepresentation::setPositions(Eigen::MatrixXd V)
+{
+	Vpos = (CameraProjectionTransform*CameraViewTransform*V.transpose()).transpose();
+}
