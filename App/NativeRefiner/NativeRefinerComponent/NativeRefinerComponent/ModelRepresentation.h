@@ -9,9 +9,9 @@ namespace modelRep {
 	//triangle
 	struct Triangle
 	{
-		Eigen::Vector3d* t0;
-		Eigen::Vector3d* t1;
-		Eigen::Vector3d* t2;
+		int t0;
+		int t1;
+		int t2;
 	};
 	class ModelRepresentation
 	{
@@ -21,7 +21,7 @@ namespace modelRep {
 		bool loadFile(std::string path);
 		int nTriang;
 	private:
-		Eigen::Vector3d* vertices;
+		std::vector<Eigen::Vector3d> vertices;
 		std::vector<Triangle> triangles;
 	};
 }
