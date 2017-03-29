@@ -21,8 +21,6 @@ modelRep::ModelRepresentation::~ModelRepresentation()
 
 void modelRep::ModelRepresentation::subDivide()
 {
-	Eigen::MatrixXi newF;
-	Eigen::SparseMatrix<int> S;
 	igl::upsample(V, F, 1);
 }
 
