@@ -60,5 +60,7 @@ Eigen::Vector2f imageRep::ImageRepresentation::imageSpaceGradientCompare(ImageRe
 
 void imageRep::ImageRepresentation::setPositions(Eigen::MatrixXd V)
 {
-	Vpos = (CameraProjectionTransform*CameraViewTransform*V.transpose()).transpose();
+	//problem: CameraProjectionTransform and CameraViewTransform are float matrices...
+	//TODO: convert them to double
+	//Vpos = (CameraProjectionTransform*CameraViewTransform*V.transpose()).transpose();
 }

@@ -29,11 +29,6 @@ namespace imageRep {
 		/// </summary>
 		void setPositions(Eigen::MatrixXd V);
 
-		/// <summary>
-		/// step that computes positions in image space 
-		/// </summary>
-		void setPositions(Eigen::MatrixXd V);
-
 		const std::string filename;
 		std::vector<unsigned char> image;
 		cv::Mat ocvImage;

@@ -7,6 +7,8 @@
 // obtain one at http://mozilla.org/MPL/2.0/.
 #ifndef IGL_PARALLEL_FOR_H
 #define IGL_PARALLEL_FOR_H
+#undef min
+#undef max
 #include "igl_inline.h"
 #include <functional>
 
