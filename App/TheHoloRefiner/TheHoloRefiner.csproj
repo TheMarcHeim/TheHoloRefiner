@@ -154,6 +154,23 @@
   <ItemGroup>
     <Compile Include="App.cs">
     </Compile>
+    <Content Include="opencv_calib3d300.dll" />
+    <Content Include="opencv_core300.dll" />
+    <Content Include="opencv_features2d300.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="opencv_flann300.dll" />
+    <Content Include="opencv_imgcodecs300.dll" />
+    <Content Include="opencv_imgproc300.dll" />
+    <Content Include="opencv_ml300.dll" />
+    <Content Include="opencv_objdetect300.dll" />
+    <Content Include="opencv_photo300.dll" />
+    <Content Include="opencv_shape300.dll" />
+    <Content Include="opencv_stitching300.dll" />
+    <Content Include="opencv_video300.dll" />
+    <Content Include="opencv_videoio300.dll" />
+    <Content Include="opencv_videostab300.dll" />
+    <Content Include="opencv_winrt.dll" />
     <Content Include="Resource.res">
     </Content>
     <Content Include="Assets\SplashScreen.scale-200.png">
