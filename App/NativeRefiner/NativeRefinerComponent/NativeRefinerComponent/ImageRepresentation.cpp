@@ -22,3 +22,19 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 		pCameraProjectionTransform.m31, pCameraProjectionTransform.m32, pCameraProjectionTransform.m33, pCameraProjectionTransform.m34,
 		pCameraProjectionTransform.m41, pCameraProjectionTransform.m42, pCameraProjectionTransform.m43, pCameraProjectionTransform.m44;
 }
+
+//compute affine transformation
+// Eigen::Mat<int, 3,2> computeAffine(Eigen::vec<int,3,1> surface_normal, Eigen::vec<int,3,1> vertex, Windows::Foundation::Numerics::float4x4 pCameraViewTransform,
+// Windows::Foundation::Numerics::float4x4 pCameraProjectionTransform, int u, int v, int patch_size, float focal_length){
+
+//compute camera center
+// Eigen::vec<float, 3,1> camera_center = (pCameraViewTransform*pCameraProjectionTransform).block<3,1>(3,0);
+
+// compute scale
+// float scale = (camera_center - vertex).norm() / focal_length;
+
+// compute shear
+
+//return matrix
+
+//}
