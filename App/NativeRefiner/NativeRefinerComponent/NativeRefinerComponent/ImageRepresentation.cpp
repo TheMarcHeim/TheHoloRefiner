@@ -64,56 +64,74 @@ void imageRep::ImageRepresentation::setPositions(Eigen::MatrixXd V)
 	//Vpos = (CameraProjectionTransform*CameraViewTransform*V.transpose()).transpose();
 }
 
-//compute 3d projection of 2d point
-// Eigen::Vector3d project2dto3d(ImageRepresentation& image, Eigen::vec<int,3,1> surface_normal, Eigen::vec<int,3,1> vertex, int u, int v){
 
-// get orientation of camera
-//Eigen::Matrix3d R_cw = image.CameraViewTransform.block<3,3>(0,0); //camera orientation matrix
-//Eigen::Vector3d C_w = image.CameraViewTransform.block<3, 1>(0, 3); //camera position in world frame
-// Eigen::Matrix3d K = image.CameraProjectionTransform.block<3,3>(0,0); // kamera calibration matrix
 
-//get image coordinates of point
-//Eigen::Vector3d p_c = K.inv()*Eigen::Vector3d(u,v,1); //in camera frame
-//Eigen::Vector3d p_w = R_cw.transpose()*p_c; //in camera frame
+//compute 3d projection of 2d point (onto surface defined by normal)
+Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(ImageRepresentation& image, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, Eigen::Vector2d p){
 
-// compute scale
-// float lambda = (vertex - C_w).dot(surface_normal)/p_w.dot(surface_normal);
+	double u = p(0);
+	double v = p(1);
+	// get orientation of camera
+	Eigen::Matrix3d R_cw = image.CameraViewTransform.block<3,3>(0,0); //camera orientation matrix
+	Eigen::Vector3d C_w = image.CameraViewTransform.block<3, 1>(0, 3); //camera position in world frame
+	Eigen::Matrix3d K = image.CameraProjectionTransform.block<3,3>(0,0); // kamera calibration matrix
 
-// compute world frame points
-//Eigen::Vector3d P_w = C_w + lambda*p_w; //point in world frame
+	//get image coordinates of point
+	Eigen::Vector3d p_c = K.inverse()*Eigen::Vector3d(u,v,1); //in camera frame
+	Eigen::Vector3d p_w = R_cw.transpose()*p_c; //in camera frame
 
-//return P_w;
-//}
+	// compute scale
+	 float lambda = (vertex - C_w).dot(surface_normal)/p_w.dot(surface_normal);
+
+	// compute world frame points
+	Eigen::Vector3d P_w = C_w + lambda*p_w; //point in world frame
+
+	return P_w;
+}
 
 
 //compute warped patch coordinates
-// Eigen::Matrix<double, 3,4> = computeDistortedPatch(ImageRepresentation& image1, ImageRepresentation& image2, Eigen::vec<int,3,1> surface_normal, Eigen::vec<int,4,1> vertex, int patch_size){
+ Eigen::Matrix<double, 3,4> imageRep::ImageRepresentation::computeDistortedPatch(ImageRepresentation& image1, ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::vec<int,4,1> vertex, int patch_size){
 
-// compute center point
-//Eigen::Matrix3d R1_cw = image1.CameraViewTransform.block<3,3>(0,0); //camera orientation matrix
-//Eigen::Vector3d C1_w = image1.CameraViewTransform.block<3, 1>(0, 3); //camera position in world frame
-// Eigen::Matrix3d K = image1.CameraProjectionTransform.block<3,3>(0,0); // kamera calibration matrix
-//Eigen::Vector4d center_not_normalized = K*image1.CameraViewTransform1*vertex;
-//double center_x = center_not_normalized(0)/center_not_normalized(2);
-//double center_y = center_not_normalized(1)/center_not_normalized(2);
+	// compute center point
+	Eigen::Matrix3d R1_cw = image1.CameraViewTransform.block<3,3>(0,0); //camera orientation matrix
+	Eigen::Vector3d C1_w = image1.CameraViewTransform.block<3, 1>(0, 3); //camera position in world frame
+	Eigen::Matrix3d K = image1.CameraProjectionTransform.block<3,3>(0,0); // kamera calibration matrix
+	Eigen::Vector4d center_not_normalized = K*image1.CameraViewTransform1*vertex;
+	double center_x = center_not_normalized(0)/center_not_normalized(2);
+	double center_y = center_not_normalized(1)/center_not_normalized(2);
 
-//compute all points in camera 1
-//Eigen::Matrix<double, 2,4> p_c1;
-//p_c1 << center_x + patch_size, center_x - patch_size, center_x + patch_size, center_x - patch_size,
-//		center_y + patch_size, center_y + patch_size, center_y - patch_size, center_y - patch_size;
+	//compute all points in camera 1
+	p1_c1 = Eigen::Vector2d(center_x + patch_size, center_y + patch_size);
+	p1_c2 = Eigen::Vector2d(center_x - patch_size, center_y + patch_size);
+	p1_c3 = Eigen::Vector2d(center_x + patch_size, center_y - patch_size);
+	p1_c4 = Eigen::Vector2d(center_x - patch_size, center_y - patch_size);
 
-// compute 3d projections of those points
-//...project2dto3d(ImageRepresentation& image, Eigen::vec<int,3,1> surface_normal, Eigen::vec<int,3,1> vertex, int u, int v)...
+	// compute 3d projections of those points
+	Eigen::Vector4d P1_c1 = project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p1_c1);
+	Eigen::Vector4d P2_c1 = project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p2_c1);
+	Eigen::Vector4d P3_c1 = project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p3_c1);
+	Eigen::Vector4d P4_c1 = project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p4_c1);
 
-// compute projection of 3d points into new camera
-//... K*image2.CameraViewTransform.block<3,4>(0,0)*points...
+	// compute projection of 3d points into new camera
+	Eigen::Vector4d temp_p1 = K*image2.CameraViewTransform.block<3, 4>(0, 0)*P1_c1;
+	Eigen::Vector4d temp_p2 = K*image2.CameraViewTransform.block<3, 4>(0, 0)*P2_c1;
+	Eigen::Vector4d temp_p3 = K*image2.CameraViewTransform.block<3, 4>(0, 0)*P3_c1;
+	Eigen::Vector4d temp_p4 = K*image2.CameraViewTransform.block<3, 4>(0, 0)*P4_c1;
 
-// compute perspective/affine transformation of new patch
-//...M = cv2.getPerspectiveTransform(pts1, pts2)...
+	// normalize points in new camera
+	Eigen::Vector2d p1_c2 = (temp_p1(0) / temp_p1(2), temp_p1(1) / temp_p1(2));
+	Eigen::Vector2d p2_c2 = (temp_p2(0) / temp_p2(2), temp_p2(1) / temp_p2(2));
+	Eigen::Vector2d p3_c2 = (temp_p3(0) / temp_p3(2), temp_p3(1) / temp_p3(2));
+	Eigen::Vector2d p4_c2 = (temp_p4(0) / temp_p4(2), temp_p4(1) / temp_p4(2));
+	
+
+	// compute perspective/affine transformation of new patch
+	M = cv2.getPerspectiveTransform(pts1, pts2)...
 
 
-// apply perspective transform to "undistort" patch
-//...dst = cv2.warpPerspective(img, M, (300, 300))...
+	// apply perspective transform to "undistort" patch
+	//...dst = cv2.warpPerspective(img, M, (300, 300))...
 
 
 //}
