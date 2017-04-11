@@ -26,7 +26,7 @@ namespace imageRep {
 
 		Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(ImageRepresentation& image, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, Eigen::Vector2d p);
 
-		Eigen::Matrix<double, 3, 4> imageRep::ImageRepresentation::computeDistortedPatch(ImageRepresentation& image1, ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, int patch_size);
+		Eigen::Matrix<double, 3, 4> imageRep::ImageRepresentation::computeDistortedPatch(ImageRepresentation& image1, ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
 
 		/// <summary>
 		/// step that computes positions in image space 
