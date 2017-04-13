@@ -98,33 +98,33 @@ Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(ImageRepresentation
 	cv::Mat img_c2 = image2.ocvImage;
 
 	// homogenize vertex
-	Eigen::Vector4d vertex = (vertex_in(1), vertex_in(2), vertex_in(3), 1);
+	Eigen::Vector4d vertex(vertex_in(1), vertex_in(2), vertex_in(3), 1);
 
 	// compute center point
 	Eigen::Matrix3d R1_cw = image1.CameraViewTransform.block<3,3>(0,0); //camera orientation matrix
 	Eigen::Vector3d C1_w = image1.CameraViewTransform.block<3, 1>(0, 3); //camera position in world frame
 	Eigen::Matrix3d K = image1.CameraProjectionTransform.block<3,3>(0,0); // kamera calibration matrix
-	Eigen::Vector4d center_not_normalized = K*image1.CameraViewTransform1*vertex;
+	Eigen::Vector4d center_not_normalized = K*image1.CameraViewTransform*vertex;
 	double center_x = center_not_normalized(0)/center_not_normalized(2);
 	double center_y = center_not_normalized(1)/center_not_normalized(2);
 
 	//compute all points in camera 1
-	p1_c1 = Eigen::Vector2d(center_x + patch_size.width, center_y + patch_size.height);
-	p2_c1 = Eigen::Vector2d(center_x - patch_size.width, center_y + patch_size.height);
-	p3_c1 = Eigen::Vector2d(center_x + patch_size.width, center_y - patch_size.height);
-	p4_c1 = Eigen::Vector2d(center_x - patch_size.width, center_y - patch_size.height);
+	Eigen::Vector2d p1_c1(center_x + patch_size.width, center_y + patch_size.height);
+	Eigen::Vector2d p2_c1(center_x - patch_size.width, center_y + patch_size.height);
+	Eigen::Vector2d p3_c1(center_x + patch_size.width, center_y - patch_size.height);
+	Eigen::Vector2d p4_c1(center_x - patch_size.width, center_y - patch_size.height);
 
-	const cv::Points2f[4] p_c1;
-	p_c1[0] = (p1_c1(1), p1_c1(2));
-	p_c1[1] = (p2_c1(1), p2_c1(2));
-	p_c1[2] = (p3_c1(1), p3_c1(2));
-	p_c1[3] = (p4_c1(1), p4_c1(2));
+	cv::Point2f p_c1[4];
+	p_c1[0] = cv::Point2f(p1_c1(1), p1_c1(2));
+	p_c1[1] = cv::Point2f(p2_c1(1), p2_c1(2));
+	p_c1[2] = cv::Point2f(p3_c1(1), p3_c1(2));
+	p_c1[3] = cv::Point2f(p4_c1(1), p4_c1(2));
 
 	// compute 3d projections of those points
-	Eigen::Vector4d P1_c1 = imageRep::ImageRepresentation::project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p1_c1);
-	Eigen::Vector4d P2_c1 = imageRep::ImageRepresentation::project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p2_c1);
-	Eigen::Vector4d P3_c1 = imageRep::ImageRepresentation::project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p3_c1);
-	Eigen::Vector4d P4_c1 = imageRep::ImageRepresentation::project2dto3d(ImageRepresentation& image1, Eigen::vec<int, 3, 1> surface_normal, Eigen::vec<int, 4, 1> vertex, p4_c1);
+	Eigen::Vector4d P1_c1 = imageRep::ImageRepresentation::project2dto3d(image1, surface_normal, vertex, p1_c1);
+	Eigen::Vector4d P2_c1 = imageRep::ImageRepresentation::project2dto3d(image1, surface_normal, vertex, p2_c1);
+	Eigen::Vector4d P3_c1 = imageRep::ImageRepresentation::project2dto3d(image1, surface_normal, vertex, p3_c1);
+	Eigen::Vector4d P4_c1 = imageRep::ImageRepresentation::project2dto3d(image1, surface_normal, vertex, p4_c1);
 
 	// compute projection of 3d points into camera 2
 	Eigen::Vector4d temp_p1 = K*image2.CameraViewTransform.block<3, 4>(0, 0)*P1_c1;
@@ -133,11 +133,11 @@ Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(ImageRepresentation
 	Eigen::Vector4d temp_p4 = K*image2.CameraViewTransform.block<3, 4>(0, 0)*P4_c1;
 
 	// normalize points in new camera	
-	const cv::Point2d[4] p_c2;
-	p_c2[0] = (temp_p1(0) / temp_p1(2), temp_p1(1) / temp_p1(2));
-	p_c2[1] = (temp_p2(0) / temp_p2(2), temp_p2(1) / temp_p2(2));
-	p_c2[2] = (temp_p3(0) / temp_p3(2), temp_p3(1) / temp_p3(2));
-	p_c2[3] = (temp_p4(0) / temp_p4(2), temp_p4(1) / temp_p4(2));
+	cv::Point2f p_c2[4];
+	p_c2[0] = cv::Point2f(temp_p1(0) / temp_p1(2), temp_p1(1) / temp_p1(2));
+	p_c2[1] = cv::Point2f(temp_p2(0) / temp_p2(2), temp_p2(1) / temp_p2(2));
+	p_c2[2] = cv::Point2f(temp_p3(0) / temp_p3(2), temp_p3(1) / temp_p3(2));
+	p_c2[3] = cv::Point2f(temp_p4(0) / temp_p4(2), temp_p4(1) / temp_p4(2));
 	
 	// compute perspective/affine transformation of new patch... Interestingly, M encodes somehow patch sizes, location etc (?!) cf link below
 	// http://opencvexamples.blogspot.com/2014/01/perspective-transform.html 
@@ -146,6 +146,4 @@ Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(ImageRepresentation
 
 	// and apply perspective transform to "undistort" patch
 	cv::warpPerspective(img_c2, img_c1, M, patch_size);
-
-
 }
