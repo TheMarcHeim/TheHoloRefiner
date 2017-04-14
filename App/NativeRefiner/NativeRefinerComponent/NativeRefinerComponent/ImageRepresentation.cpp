@@ -64,8 +64,6 @@ void imageRep::ImageRepresentation::setPositions(Eigen::MatrixXd V)
 	//Vpos = (CameraProjectionTransform*CameraViewTransform*V.transpose()).transpose();
 }
 
-
-
 //compute 3d projection of 2d point (onto surface defined by normal)
 Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(ImageRepresentation& image, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, Eigen::Vector3d p){
 
@@ -86,9 +84,6 @@ Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(ImageRepresentation
 	
 	return P_w;
 }
-
-
-
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
 cv::Mat imageRep::ImageRepresentation::computeDistortedPatch(ImageRepresentation& image1, ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size){
@@ -136,7 +131,7 @@ cv::Mat imageRep::ImageRepresentation::computeDistortedPatch(ImageRepresentation
 	Eigen::Vector3d P3_c1 = imageRep::ImageRepresentation::project2dto3d(image1, surface_normal, vertex, p3_c1);
 	Eigen::Vector3d P4_c1 = imageRep::ImageRepresentation::project2dto3d(image1, surface_normal, vertex, p4_c1);
 
-	//homogenize points
+	// homogenize points
 	Eigen::Vector4d hP1_c1(P1_c1(0), P1_c1(1), P1_c1(2), 1);
 	Eigen::Vector4d hP2_c1(P2_c1(0), P2_c1(1), P2_c1(2), 1);
 	Eigen::Vector4d hP3_c1(P3_c1(0), P3_c1(1), P3_c1(2), 1);
@@ -157,7 +152,7 @@ cv::Mat imageRep::ImageRepresentation::computeDistortedPatch(ImageRepresentation
 	
 	// compute perspective/affine transformation of new patch... Interestingly, M encodes somehow patch sizes, location etc (?!) cf link below
 	// http://opencvexamples.blogspot.com/2014/01/perspective-transform.html 
-	//Nico's comment: I disagree... according to docs.opencv.org M should be 3x3. In the above link it is initialized as 2x4..?
+	// Nico's comment: I disagree... according to docs.opencv.org M should be 3x3. In the above link it is initialized as 2x4..?
 	cv::Mat M = cv::Mat::zeros(img_c1.rows, img_c1.cols, img_c1.type());	
 	M = cv::getPerspectiveTransform(p_c2, p_c1);
 
