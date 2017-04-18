@@ -60,8 +60,8 @@ void modelRep::ModelRepresentation::Refine(imageRep::ImageRepresentation & I, im
 
 
 
-	I.setPositions(V);
-	J.setPositions(V);
+	//I.setPositions(V);
+	//J.setPositions(V);
 	
 }
 

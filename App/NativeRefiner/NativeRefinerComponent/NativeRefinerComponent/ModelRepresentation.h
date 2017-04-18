@@ -25,7 +25,7 @@ namespace modelRep {
 		/// <summary>
 		/// Make refinement step for image pair
 		/// </summary>
-		void Refine(imageRep::ImageRepresentation& I, imageRep::ImageRepresentation& J, double stepSize);
+		void Refine(imageRep::ImageRepresentation& I, imageRep::ImageRepresentation& J, int numIt, double stepSize);
 
 		bool loadFile(std::string path);
 		
