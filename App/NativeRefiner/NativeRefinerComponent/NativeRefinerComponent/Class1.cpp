@@ -3,6 +3,7 @@
 
 #include <ppltasks.h>
 #include <concurrent_vector.h>
+#include <iostream>
 
 
 using namespace NativeRefinerComponent;
@@ -15,10 +16,8 @@ using namespace Windows::UI::Core;
 
 
 
-
 NativeRefiner::NativeRefiner()
 {
-
 }
 
 void NativeRefinerComponent::NativeRefiner::reset()
