@@ -61,6 +61,7 @@ namespace RefinerTest
                 //this.resultBox.Text = "Picked object: " + file.Name+" path: " +file.Path;
 
                 refiner.addInitModel(file.Name);
+                var dialog = new MessageDialog("Test, added model");
                 resultBox.Text= refiner.getSize().ToString()+" triangles";
             }
             else

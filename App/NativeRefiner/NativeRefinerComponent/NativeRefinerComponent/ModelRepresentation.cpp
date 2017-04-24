@@ -22,7 +22,7 @@ void modelRep::ModelRepresentation::subDivide()
 	igl::upsample(V, F, 1);
 }
 
-void modelRep::ModelRepresentation::Refine(imageRep::ImageRepresentation & I, imageRep::ImageRepresentation & J, int numIt, double stepSize)
+float modelRep::ModelRepresentation::AdjustVertex(imageRep::ImageRepresentation& I, imageRep::ImageRepresentation& J, int vertex)
 {
 
 	/* TO DO
@@ -42,7 +42,9 @@ void modelRep::ModelRepresentation::Refine(imageRep::ImageRepresentation & I, im
 
 
 	Different tasks:
+		- Subdivision
 		- Calculate normal at a vertex from the normals of the adjacent triangles (area weighted average?)
+		- Vertex <- cameras (inside image frame, not occluded)
 		- Forming image pairs fulfilling a criterion yet to be defined (cf above)
 		- Given two image patches, calculate the distance by which the vertex will be shifted
 		- Move a vertex given the desired distance and the vertex normal
@@ -63,6 +65,14 @@ void modelRep::ModelRepresentation::Refine(imageRep::ImageRepresentation & I, im
 	//I.setPositions(V);
 	//J.setPositions(V);
 	
+}
+
+
+void Refine(int numIt, double stepSize) {
+
+	//subdivide
+	//some logic to refine mesh via AdjustVertex
+
 }
 
 bool modelRep::ModelRepresentation::loadFile(std::string path)

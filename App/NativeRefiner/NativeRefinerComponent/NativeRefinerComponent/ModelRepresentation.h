@@ -25,12 +25,19 @@ namespace modelRep {
 		/// <summary>
 		/// Make refinement step for image pair
 		/// </summary>
-		void Refine(imageRep::ImageRepresentation& I, imageRep::ImageRepresentation& J, int numIt, double stepSize);
+		float AdjustVertex(imageRep::ImageRepresentation& I, imageRep::ImageRepresentation& J, int vertex);
+
+		void Refine(int numIt, double stepSize);
 
 		bool loadFile(std::string path);
 		
 		int nTriang;
 		int nVert;
+		
+		int nImg;				   //#images
+		Eigen::MatrixXi VertexCam; //Which cameras see which vertices (nVert x nImg)
+		std::vector <imageRep::ImageRepresentation> views;
+
 	private:
 		Eigen::MatrixXd V;
 		Eigen::MatrixXi F;
