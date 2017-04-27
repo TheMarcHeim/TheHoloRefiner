@@ -96,12 +96,13 @@ namespace RefinerTest
                     matText = System.IO.File.ReadAllText(file.Name + ".matr");
                 }
                 catch (Exception exc){}
-                char[] delimiterChars = { ' ', ',', '.', ':', '\t', '\n' };
+                char[] delimiterChars = { ' ', ',', ':', '\t', '\n' };
                 string[] values = matText.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
                 float[] fV = new float[32];
                 if (values.Length != 32)
                 {
-                    this.resultBox.Text = "no valid matrices (not right amount of values or no file)";
+                    this.resultBox.Text = "no valid matrices (not right amount of values or no file) length of values is: " + values.Length.ToString();
+                    
                 }
                 else
                 {
@@ -129,7 +130,7 @@ namespace RefinerTest
                     fV[20], fV[21], fV[22], fV[23],
                     fV[24], fV[25], fV[26], fV[27],
                     fV[28], fV[29], fV[30], fV[31]);
-
+               // this.resultBox.Text = "View matrix is: " + View.ToString();
                 //this.resultBox.Text = "Picked Image: " + file.Name + " path: " + file.Path;
                 refiner.addPicture(file.Name, View, Projection);
                 this.imageCountBox.Text = refiner.getNImages().ToString() + " images\n";// + View.ToString() + "\n" + Projection.ToString();
