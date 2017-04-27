@@ -64,7 +64,7 @@ float modelRep::ModelRepresentation::AdjustVertex(imageRep::ImageRepresentation&
 
 	//I.setPositions(V);
 	//J.setPositions(V);
-	
+	return 0;
 }
 
 

@@ -8,6 +8,7 @@
 #include "ModelRepresentation.h"
 #include "ImageRepresentation.h"
 #include <string>
+#include <Eigen/StdVector>
 
 
 namespace NativeRefinerComponent
@@ -62,6 +63,6 @@ namespace NativeRefinerComponent
 
 	private:
 		modelRep::ModelRepresentation model;
-		std::vector<imageRep::ImageRepresentation> images;
+		std::vector<imageRep::ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
 	};
 }
