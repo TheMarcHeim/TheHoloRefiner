@@ -40,6 +40,8 @@ namespace imageRep {
 		Eigen::Matrix4f CameraViewTransform;
 		Eigen::Matrix4f CameraProjectionTransform;
 		Eigen::Matrix<double, -1, 2> Vpos;
+	    int x_size;
+		int y_size;
 
 	private:
 		cv::Mat dXImg;

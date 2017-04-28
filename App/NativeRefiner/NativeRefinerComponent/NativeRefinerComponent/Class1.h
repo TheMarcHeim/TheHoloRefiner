@@ -9,14 +9,14 @@
 #include "ImageRepresentation.h"
 #include <string>
 #include <Eigen/StdVector>
-
+#define NUMBER_STEPS_DEPTH_SEARCH  10
 
 namespace NativeRefinerComponent
 {
 	public delegate void ComputationFinishedHandler(int result);
-    public ref class NativeRefiner sealed
-    {
-    public:
+	public ref class NativeRefiner sealed
+	{
+	public:
 		NativeRefiner();
 
 		//usage in c#:
@@ -61,8 +61,17 @@ namespace NativeRefinerComponent
 
 		int getNImages();
 
+		void computeVisibility();
+
+		bool isVisible(int thisView, int thisVertex);
+
+		void computeAdjustmentScores(int* adjustmentScores, int vertex);
+
 	private:
 		modelRep::ModelRepresentation model;
 		std::vector<imageRep::ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
+		int nImages;
+		Eigen::MatrixXi visibility; //rows: vertices, columns: images
+		int adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
 	};
 }

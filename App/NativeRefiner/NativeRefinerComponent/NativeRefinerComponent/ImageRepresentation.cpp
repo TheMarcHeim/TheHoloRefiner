@@ -15,6 +15,10 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 
 	//prepare openCV buffers
 	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
+	x_size = ocvImage.cols;
+	y_size = ocvImage.rows;
+
+
 	//set ksize = 5 for local minima prevention
 	//one for x and y
 	cv::Sobel(ocvImage, dXImg, -1, 1, 0, 5);
