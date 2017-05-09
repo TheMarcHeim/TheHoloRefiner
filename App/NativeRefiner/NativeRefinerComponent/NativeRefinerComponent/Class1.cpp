@@ -97,39 +97,44 @@ int NativeRefinerComponent::NativeRefiner::getNImages() {
 
 void NativeRefinerComponent::NativeRefiner::computeVisibility() {
 
-	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);					//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
+	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);		//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
 	
 	for (int v = 0; v < model.nVert; v++) {
 		for (int i = 0; i < nImages; i++) {
 			if (isVisible(v,i)) {
-				visibility(v,i) = 1;											//rows: vertices, columns: images
+				visibility(v,i) = 1;	//rows: vertices, columns: images
 			}
 		}
 	}
 }
 
-bool NativeRefinerComponent::NativeRefiner::isVisible( int thisVertex, int thisView) {
+bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisView) {
 
-	double threshold = 0.0;														// threshold for visibility
+	double threshold = 0.0;				// threshold for visibility
 	bool visible = false;
 	
-	Eigen::Vector3d C = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>(); //camera center
-	Eigen::Vector3d p = model.V.block<1, 3>(thisVertex, 0).transpose(); // point in world frame (vertex)
-	Eigen::Vector4d p_n(p(0), p(1), p(2), 1);
+	Eigen::Vector3d C = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();		// camera center
+	Eigen::Vector3d p = model.V.block<1, 3>(thisVertex, 0).transpose();								// point in world frame (vertex)
+	Eigen::Vector4d hp(p(0), p(1), p(2), 1);														// homogenized vertex
 	
-	Eigen::Matrix<double, 3, 4> T = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>()*images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>();
-	Eigen::Vector3d pixels_not_normalized = T* p_n; // project vertex into image
-	double x_px = pixels_not_normalized(0) / pixels_not_normalized(2); // normalize points in 2d image space
-	double y_px = pixels_not_normalized(1) / pixels_not_normalized(2);
+	Eigen::Matrix<double, 3, 4> Prj = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>()*images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>();
+	Eigen::Vector3d pixels_not_normalized = Prj*hp;													// project vertex into image
 	
-	
-	// check if vertex projects into image
-	if (x_px < images[thisView].x_size && y_px < images[thisView].y_size && x_px >= 0 && y_px >= 0) {
-		// check if patch is reasonably facing the camera
-		if (model.VN.block<1, 3>(thisVertex, 0).transpose().dot((p - C).normalized()) > threshold) {
-			visible = true;
+	// check if vertex is in front of camera
+	if (pixels_not_normalized(2) > 0) {
+		double x_px = pixels_not_normalized(0) / pixels_not_normalized(2);							// normalize points in 2d image space
+		double y_px = pixels_not_normalized(1) / pixels_not_normalized(2);
+
+		// check if vertex projects into image
+		if (x_px < images[thisView].x_size && y_px < images[thisView].y_size && x_px >= 0 && y_px >= 0) {
+			
+			// check if patch is reasonably facing the camera using surface normal
+			if (model.VN.block<1, 3>(thisVertex, 0).transpose().dot((p - C).normalized()) > threshold) {
+				visible = true;
+			}
 		}
 	}
+
 	return visible;
 }
 

@@ -68,7 +68,7 @@ float modelRep::ModelRepresentation::AdjustVertex(imageRep::ImageRepresentation&
 }
 
 
-void Refine(int numIt, double stepSize) {
+void Refine(int numIt, double stepSize) {	//How does this compare to refine in class1?
 
 	//subdivide
 	//some logic to refine mesh via AdjustVertex
