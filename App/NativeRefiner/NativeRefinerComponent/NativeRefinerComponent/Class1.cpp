@@ -96,19 +96,21 @@ int NativeRefinerComponent::NativeRefiner::getNImages() {
 }
 
 void NativeRefinerComponent::NativeRefiner::computeVisibility() {
-	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);//rows: vertices, columns: images
-	for (int i = 0; i < model.nVert; i++) {
-		for (int j = 0; j < nImages; j++) {
-			if (isVisible(j, i)) {
-				visibility(i, j) = 1;	//rows: vertices, columns: images
+
+	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);					//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
+	
+	for (int v = 0; v < model.nVert; v++) {
+		for (int i = 0; i < nImages; i++) {
+			if (isVisible(v,i)) {
+				visibility(v,i) = 1;											//rows: vertices, columns: images
 			}
 		}
 	}
 }
 
-bool NativeRefinerComponent::NativeRefiner::isVisible(int thisView, int thisVertex) {
+bool NativeRefinerComponent::NativeRefiner::isVisible( int thisVertex, int thisView) {
 
-	double threshold = 0.0; // threshold for visibility
+	double threshold = 0.0;														// threshold for visibility
 	bool visible = false;
 	
 	Eigen::Vector3d C = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>(); //camera center
@@ -143,8 +145,8 @@ void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(int* adjustm
 	int step = 1;
 	double step_size = 2;
 
-	p = model.V.block<1, 3>(vertex, 0).transpose(); // point in world frame (vertex)
-	n = model.VN.block<1, 3>(vertex, 0).transpose();
+	p = model.V.block<1, 3>(vertex, 0).transpose();		// point in world frame (vertex)
+	n = model.VN.block<1, 3>(vertex, 0).transpose();	// normal vector
 
 	p_current = p+step*step_size*n;
 	

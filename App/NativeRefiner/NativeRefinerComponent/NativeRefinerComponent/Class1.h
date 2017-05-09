@@ -53,23 +53,39 @@ namespace NativeRefinerComponent
 		void addInitModel(Platform::String^ path);
 
 		/// <summary>
-		/// Async task that refines the 
+		/// Async task that refines the reconstruction
 		/// </summary>
 		Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Refine();
 
+		/// <summary>
+		/// (current) number of vertices of reconstruction
+		/// </summary>
 		int getSize();
 
+		/// <summary>
+		/// number of images
+		/// </summary>
 		int getNImages();
 
+		/// <summary>
+		/// Async task that refines the reconstruction
+		/// </summary>
 		void computeVisibility();
 
+		/// <summary>
+		/// Async task that refines the reconstruction
+		/// </summary>
 		bool isVisible(int thisView, int thisVertex);
 
+		/// <summary>
+		/// Async task that refines the reconstruction
+		/// </summary>
 		void computeAdjustmentScores(int* adjustmentScores, int vertex);
 
 	private:
 		modelRep::ModelRepresentation model;
 		std::vector<imageRep::ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
+		
 		int nImages;
 		Eigen::MatrixXi visibility; //rows: vertices, columns: images
 		int adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
