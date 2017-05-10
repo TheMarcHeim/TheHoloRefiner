@@ -62,25 +62,52 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 
 		int testImg = 0;
 		int testVertex = 127;
-		int bingo = 0;
+		int bingo = 21340;
+		int visCount = 0;
+		int firstSight = 0;
+		int secondSight = 0;
+		cv::Size patch_size(3, 3);
+		float correlation;
 
-		computeVisibility();
+		bingo = computeVisibility();
 
+
+		// loop through all vertices and images, find pairs and compute correlation
+		
+		for (int v = 0; v < model.nVert; v++) {
+			visCount = 0;
+			for (int i = 0; i < nImages; i++) {
+				if (visibility(v,i)==1) {
+					visCount++;
+					
+					if (visCount >= 2) {
+						secondSight = i;
+						correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
+						break;
+					}
+					else {
+						firstSight = i;
+					}
+
+				}
+			}
+		}
+		
 
 		
-			//cv::namedWindow("test image",WINDOW_AUTOSIZE);
-			//cv::imshow("test image", images[testImg]);
-/*		cv::Point2i ctr(50, 50);
+		// Show vertex in a window
+		/*
+		cv::namedWindow("test image",WINDOW_AUTOSIZE);
+		cv::imshow("test image", images[testImg]);
+		cv::Point2i ctr(50, 50);
 		const cv::Scalar color(0, 100, 250);
 		cv::circle(images[testImg].ocvImage, ctr, 50, color);
 		cv::imwrite("test.png", images[testImg].ocvImage);
 	*/
-		//}
 
 
-		//return path
-		return 	bingo.ToString();
-
+		//return
+		return 	correlation.ToString();
 		reporter.report(100.0);
 	});
 
@@ -95,17 +122,19 @@ int NativeRefinerComponent::NativeRefiner::getNImages() {
 	return images.size();
 }
 
-void NativeRefinerComponent::NativeRefiner::computeVisibility() {
+int NativeRefinerComponent::NativeRefiner::computeVisibility() {
 
 	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);		//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
-	
+	int nVis = 0;
 	for (int v = 0; v < model.nVert; v++) {
 		for (int i = 0; i < nImages; i++) {
 			if (isVisible(v,i)) {
 				visibility(v,i) = 1;	//rows: vertices, columns: images
+				nVis++;
 			}
 		}
 	}
+	return nVis;
 }
 
 bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisView) {
@@ -113,15 +142,16 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	double threshold = 0.0;				// threshold for visibility
 	bool visible = false;
 	
-	Eigen::Vector3d C = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();		// camera center
-	Eigen::Vector3d p = model.V.block<1, 3>(thisVertex, 0).transpose();								// point in world frame (vertex)
-	Eigen::Vector4d hp(p(0), p(1), p(2), 1);														// homogenized vertex
+	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();	// camera center in world frame
+	Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();								// point in world frame (vertex)
+	Eigen::Vector4d hP_w(P_w(0), P_w(1), P_w(2), 1);														// homogenized vertex
 	
-	Eigen::Matrix<double, 3, 4> Prj = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>()*images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>();
-	Eigen::Vector3d pixels_not_normalized = Prj*hp;													// project vertex into image
-	
+	Eigen::Matrix<double, 3, 4> T_cw = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>()*images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>();
+	Eigen::Vector3d pixels_not_normalized = T_cw*hP_w;													// project vertex into image
+	Eigen::Vector3d P_c = images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>()*hP_w; //point in c1 frame
+
 	// check if vertex is in front of camera
-	if (pixels_not_normalized(2) > 0) {
+	if (P_c(2) > 0) {
 		double x_px = pixels_not_normalized(0) / pixels_not_normalized(2);							// normalize points in 2d image space
 		double y_px = pixels_not_normalized(1) / pixels_not_normalized(2);
 
@@ -129,12 +159,11 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 		if (x_px < images[thisView].x_size && y_px < images[thisView].y_size && x_px >= 0 && y_px >= 0) {
 			
 			// check if patch is reasonably facing the camera using surface normal
-			if (model.VN.block<1, 3>(thisVertex, 0).transpose().dot((p - C).normalized()) > threshold) {
+			if (model.VN.block<1, 3>(thisVertex, 0).transpose().dot((P_w - C_w).normalized()) > threshold) {
 				visible = true;
 			}
 		}
 	}
-
 	return visible;
 }
 
