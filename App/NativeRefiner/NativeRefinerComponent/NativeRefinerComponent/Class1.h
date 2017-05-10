@@ -70,7 +70,7 @@ namespace NativeRefinerComponent
 		/// <summary>
 		/// Async task that refines the reconstruction
 		/// </summary>
-		void computeVisibility();
+		int computeVisibility();
 
 		/// <summary>
 		/// Async task that refines the reconstruction

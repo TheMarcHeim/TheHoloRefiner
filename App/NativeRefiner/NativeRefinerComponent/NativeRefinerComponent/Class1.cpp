@@ -62,9 +62,28 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 
 		int testImg = 0;
 		int testVertex = 127;
-		int bingo = 0;
+		int bingo = 21340;
+		int visCount = 0;
+		int firstSight = 0;
+		cv::Size patch_size(3, 3);
+		cv::Scalar correlation;
 
-		computeVisibility();
+		bingo = computeVisibility();
+
+		for (int v = 0; v < model.nVert; v++) {
+			visCount = 0;
+			for (int i = 0; i < nImages; i++) {
+				if (visibility(v,i)==1) {
+					visCount++;
+					firstSight = i;
+
+					if (visCount >= 2) {
+						correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
+						break;
+					}
+				}
+			}
+		}
 
 
 		
@@ -95,17 +114,19 @@ int NativeRefinerComponent::NativeRefiner::getNImages() {
 	return images.size();
 }
 
-void NativeRefinerComponent::NativeRefiner::computeVisibility() {
+int NativeRefinerComponent::NativeRefiner::computeVisibility() {
 
 	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);		//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
-	
+	int nVis = 0;
 	for (int v = 0; v < model.nVert; v++) {
 		for (int i = 0; i < nImages; i++) {
 			if (isVisible(v,i)) {
 				visibility(v,i) = 1;	//rows: vertices, columns: images
+				nVis++;
 			}
 		}
 	}
+	return nVis;
 }
 
 bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisView) {
@@ -121,7 +142,7 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	Eigen::Vector3d pixels_not_normalized = Prj*hp;													// project vertex into image
 	
 	// check if vertex is in front of camera
-	if (pixels_not_normalized(2) > 0) {
+	//if (pixels_not_normalized(2) > 0) {
 		double x_px = pixels_not_normalized(0) / pixels_not_normalized(2);							// normalize points in 2d image space
 		double y_px = pixels_not_normalized(1) / pixels_not_normalized(2);
 
@@ -133,7 +154,7 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 				visible = true;
 			}
 		}
-	}
+	//}
 
 	return visible;
 }

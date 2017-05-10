@@ -90,7 +90,7 @@ Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(Eigen::Vector3d sur
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
-void imageRep::ImageRepresentation::computeDistortedPatch(cv::Mat& output, ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size){
+cv::Scalar imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size){
 	
 	// Nomencalture: 
 	// hpoint:	homogenous 2D image plane point (->3D)
@@ -103,7 +103,8 @@ void imageRep::ImageRepresentation::computeDistortedPatch(cv::Mat& output, Image
 	// images of camera 1 and camera 2
 	cv::Mat img_c1 = ocvImage;
 	cv::Mat img_c2 = image2.ocvImage;
-	
+	cv::Mat output;
+
 	// homogenize vertex
 	Eigen::Vector4d hVertex(vertex(1), vertex(2), vertex(3), 1);										// POTENTIAL ERROR: do we require 1 or -1 at last entry? In other words, does TX_cw
 	
@@ -170,5 +171,8 @@ void imageRep::ImageRepresentation::computeDistortedPatch(cv::Mat& output, Image
 	// So far, whoever calls this function has to calculate the patch in image 1 himself to correlate it with the one returned by this function - which is inefficient since we are doing the same at the beginning of this function as well...
 	// Suggestion: return (either explicit or by reference) both the patch of image 1 and the corresponding patch of image 2. We could also extend this function to also do the correlation 
 	// between the patches ...
-
+	cv::Rect patch(hp4_c1(0), hp4_c1(1), patch_size.width, patch_size.height);
+	cv::Scalar correlation;
+	cv::matchTemplate(cv::Mat(img_c1, patch), output, correlation, cv::TemplateMatchModes::TM_CCORR);
+	return correlation;
 }
