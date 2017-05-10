@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
+using UnityEngine;
 
 namespace RefinerPlugin
 {
@@ -22,9 +23,17 @@ namespace RefinerPlugin
             nativeRefiner.reset();
         }
 
-        public void addPicture(String name, Matrix4x4 viewTransform, Matrix4x4 projection)
+        public void addPicture(String name, UnityEngine.Matrix4x4 viewTransform, UnityEngine.Matrix4x4 projection)
         {
-            nativeRefiner.addPicture(name, viewTransform, projection);
+            System.Numerics.Matrix4x4 viewTransformS = new System.Numerics.Matrix4x4(viewTransform.m00, viewTransform.m01, viewTransform.m02, viewTransform.m03,
+                viewTransform.m10, viewTransform.m11, viewTransform.m12, viewTransform.m13,
+                viewTransform.m20, viewTransform.m21, viewTransform.m22, viewTransform.m23,
+                viewTransform.m30, viewTransform.m31, viewTransform.m32, viewTransform.m33);
+            System.Numerics.Matrix4x4 projectionS = new System.Numerics.Matrix4x4(projection.m00, projection.m01, projection.m02, projection.m03,
+                projection.m10, projection.m11, projection.m12, projection.m13,
+                projection.m20, projection.m21, projection.m22, projection.m23,
+                projection.m30, projection.m31, projection.m32, projection.m33);
+            nativeRefiner.addPicture(name, viewTransformS, projectionS);
         }
 
         public void addInitModel(String path)

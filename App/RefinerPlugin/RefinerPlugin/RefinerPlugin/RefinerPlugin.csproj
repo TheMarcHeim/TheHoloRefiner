@@ -112,12 +112,6 @@
     <EmbeddedResource Include="Properties\RefinerPlugin.rd.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\NativeRefiner\NativeRefinerComponent\NativeRefinerComponent\NativeRefinerComponent.vcxproj">
-      <Project>{b9895c02-cf86-4333-862c-847bd9a97da4}</Project>
-      <Name>NativeRefinerComponent</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="opencv_calib3d300.dll" />
     <Content Include="opencv_core300.dll" />
     <Content Include="opencv_features2d300.dll" />
@@ -133,6 +127,17 @@
     <Content Include="opencv_videoio300.dll" />
     <Content Include="opencv_videostab300.dll" />
     <Content Include="opencv_winrt.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\NativeRefiner\NativeRefinerComponent\NativeRefinerComponent\NativeRefinerComponent.vcxproj">
+      <Project>{b9895c02-cf86-4333-862c-847bd9a97da4}</Project>
+      <Name>NativeRefinerComponent</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>C:\Program Files\Unity\Editor\Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
