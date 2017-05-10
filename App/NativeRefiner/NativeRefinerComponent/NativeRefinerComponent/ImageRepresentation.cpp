@@ -173,6 +173,6 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 	// between the patches ...
 	cv::Rect patch(hp4_c1(0), hp4_c1(1), patch_size.width, patch_size.height);
 	cv::Mat correlation;
-	cv::matchTemplate(cv::Mat(img_c1, patch), output, correlation, cv::TemplateMatchModes::TM_CCORR);
+	cv::matchTemplate(cv::Mat(img_c1, patch), output, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
 	return correlation.at<float>(0,0);
 }
