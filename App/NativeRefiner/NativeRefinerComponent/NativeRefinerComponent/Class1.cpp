@@ -65,28 +65,34 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 		int bingo = 21340;
 		int visCount = 0;
 		int firstSight = 0;
+		int secondSight = 0;
 		cv::Size patch_size(3, 3);
-		cv::Scalar correlation;
+		float correlation;
 
 		bingo = computeVisibility();
 
 
 		// loop through all vertices and images, find pairs and compute correlation
-		/*
+		
 		for (int v = 0; v < model.nVert; v++) {
 			visCount = 0;
 			for (int i = 0; i < nImages; i++) {
 				if (visibility(v,i)==1) {
 					visCount++;
-					firstSight = i;
+					
 					if (visCount >= 2) {
+						secondSight = i;
 						correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
 						break;
 					}
+					else {
+						firstSight = i;
+					}
+
 				}
 			}
 		}
-		*/
+		
 
 		
 		// Show vertex in a window
@@ -101,7 +107,7 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 
 
 		//return
-		return 	bingo.ToString();
+		return 	correlation.ToString();
 		reporter.report(100.0);
 	});
 

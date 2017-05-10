@@ -26,7 +26,7 @@ namespace imageRep {
 
 		Eigen::Vector3d project2dto3d(Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, Eigen::Vector3d p);
 		
-		cv::Scalar computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
+		float computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
 		
 		/// <summary>
 		/// step that computes positions in image space 
