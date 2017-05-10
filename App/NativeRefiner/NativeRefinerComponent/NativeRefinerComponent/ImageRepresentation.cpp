@@ -109,12 +109,12 @@ cv::Scalar imageRep::ImageRepresentation::computeDistortedPatchCorrelation(Image
 	Eigen::Vector4d hVertex(vertex(1), vertex(2), vertex(3), 1);										// POTENTIAL ERROR: do we require 1 or -1 at last entry? In other words, does TX_cw
 	
 	// computing center point of patch (projection of vertex into image 1)
-	Eigen::Matrix<double, 3, 4> T1_cw = CameraViewTransform.block<3, 4>(0, 0).cast <double>();			// camera transform matrix of camera 1
-	Eigen::Matrix<double, 3, 4> T2_cw = image2.CameraViewTransform.block<3, 4>(0, 0).cast <double>();	// camera transform matrix of camera 2
+	Eigen::Matrix<double, 3, 4> T_c1w = CameraViewTransform.block<3, 4>(0, 0).cast <double>();			// camera transform matrix of camera 1
+	Eigen::Matrix<double, 3, 4> T_c2w = image2.CameraViewTransform.block<3, 4>(0, 0).cast <double>();	// camera transform matrix of camera 2
 	Eigen::Matrix3d K1 = CameraProjectionTransform.block<3,3>(0,0).cast <double>();						// camera calibration matrix of camera 1
 	Eigen::Matrix3d K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();			// camera calibration matrix of camera 2
 	
-	Eigen::Vector3d center_not_normalized = K1*T1_cw*hVertex;											// projecting vertex into image 1
+	Eigen::Vector3d center_not_normalized = K1*T_c1w*hVertex;											// projecting vertex into image 1
 	double center_x = center_not_normalized(0)/center_not_normalized(2);								// x-coordinates of vertex projected into image1
 	double center_y = center_not_normalized(1)/center_not_normalized(2);								// y-coordinates of vertex projected into image1
 	
@@ -125,22 +125,22 @@ cv::Scalar imageRep::ImageRepresentation::computeDistortedPatchCorrelation(Image
 	Eigen::Vector3d hp4_c1(center_x - patch_size.width / 2, center_y - patch_size.height / 2,1);		// patch in image 1, upper left corner
 
 	// computing 3D projections of patch corners
-	Eigen::Vector3d P1 = project2dto3d(surface_normal, vertex, hp1_c1);									// Corner points of projected patch from image 1 in world frame
-	Eigen::Vector3d P2 = project2dto3d(surface_normal, vertex, hp2_c1);
-	Eigen::Vector3d P3 = project2dto3d(surface_normal, vertex, hp3_c1);
-	Eigen::Vector3d P4 = project2dto3d(surface_normal, vertex, hp4_c1);
+	Eigen::Vector3d P1_w = project2dto3d(surface_normal, vertex, hp1_c1);									// Corner points of projected patch from image 1 in world frame
+	Eigen::Vector3d P2_w = project2dto3d(surface_normal, vertex, hp2_c1);
+	Eigen::Vector3d P3_w = project2dto3d(surface_normal, vertex, hp3_c1);
+	Eigen::Vector3d P4_w = project2dto3d(surface_normal, vertex, hp4_c1);
 
 	// homogenize 3D corner points of projected patch
-	Eigen::Vector4d hP1(P1(0), P1(1), P1(2), 1);														
-	Eigen::Vector4d hP2(P2(0), P2(1), P2(2), 1);
-	Eigen::Vector4d hP3(P3(0), P3(1), P3(2), 1);
-	Eigen::Vector4d hP4(P4(0), P4(1), P4(2), 1);
+	Eigen::Vector4d hP1_w(P1_w(0), P1_w(1), P1_w(2), 1);
+	Eigen::Vector4d hP2_w(P2_w(0), P2_w(1), P2_w(2), 1);
+	Eigen::Vector4d hP3_w(P3_w(0), P3_w(1), P3_w(2), 1);
+	Eigen::Vector4d hP4_w(P4_w(0), P4_w(1), P4_w(2), 1);
 
 	// compute projection of 3d points into image 2 (homgeneous coordinates) ...
-	Eigen::Vector3d hp1_c2 = K2*T2_cw*hP1;																
-	Eigen::Vector3d hp2_c2 = K2*T2_cw*hP2;																
-	Eigen::Vector3d hp3_c2 = K2*T2_cw*hP3;																
-	Eigen::Vector3d hp4_c2 = K2*T2_cw*hP4;																
+	Eigen::Vector3d hp1_c2 = K2*T_c2w*hP1_w;
+	Eigen::Vector3d hp2_c2 = K2*T_c2w*hP2_w;
+	Eigen::Vector3d hp3_c2 = K2*T_c2w*hP3_w;
+	Eigen::Vector3d hp4_c2 = K2*T_c2w*hP4_w;
 	
 	//  and normalize them to get the pixel coordinates which define the source frame for the perspective transform	
 	cv::Point2f p_c2[4];
