@@ -34,6 +34,7 @@ void NativeRefinerComponent::NativeRefiner::addPicture(Platform::String^ path, W
 	images.push_back(
 		imageRep::ImageRepresentation(upath, CameraViewTransform, CameraProjectionTransform));
 	nImages++;
+	std::printf("Printf works!");
 }
 
 void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String^ path)

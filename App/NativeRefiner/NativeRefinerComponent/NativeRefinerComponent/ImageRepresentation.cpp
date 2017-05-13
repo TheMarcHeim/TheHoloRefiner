@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ImageRepresentation.h"
+#include <iostream>
 
 
 imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
@@ -25,16 +26,31 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 	cv::Sobel(ocvImage, dYImg, -1, 0, 1, 5);
 
 
-	//translate matrix to eigen
-	CameraViewTransform << pCameraViewTransform.m11, pCameraViewTransform.m12, pCameraViewTransform.m13, pCameraViewTransform.m14,
-		pCameraViewTransform.m21, pCameraViewTransform.m22, pCameraViewTransform.m23, pCameraViewTransform.m24,
-		pCameraViewTransform.m31, pCameraViewTransform.m32, pCameraViewTransform.m33, pCameraViewTransform.m34,
-		pCameraViewTransform.m41, pCameraViewTransform.m42, pCameraViewTransform.m43, pCameraViewTransform.m44;
+	/*CONVENTION:
 
-	CameraProjectionTransform << pCameraProjectionTransform.m11, pCameraProjectionTransform.m12, pCameraProjectionTransform.m13, pCameraProjectionTransform.m14,
-		pCameraProjectionTransform.m21, pCameraProjectionTransform.m22, pCameraProjectionTransform.m23, pCameraProjectionTransform.m24,
-		pCameraProjectionTransform.m31, pCameraProjectionTransform.m32, pCameraProjectionTransform.m33, pCameraProjectionTransform.m34,
-		pCameraProjectionTransform.m41, pCameraProjectionTransform.m42, pCameraProjectionTransform.m43, pCameraProjectionTransform.m44;
+							 | R11 R12 R13 C1 |		With:
+	 CameraViewTransform =   | R21 R22 R23 C2 |				R mapping from CAMERA TO WORLD frame
+							 | R31 R32 R33 C3 |				C camera coordinates in WORLD frame
+							 | 0   0   0   1  |
+	
+	
+								   | fx s  cx 0 |	
+	 CameraProjectionTransform =   | 0	fy cy 0 |			Maps from CAMERA frame TO IMAGE coordinates (cu,cv,c,c). After normalization (*c^-1): (u,v) = (-1,-1) upper left, (u,v) = (1,1) lower right corner of image
+								   | 0  0  1  0 |			Multiply by image resolution (2048x1152) to get pixel values: pix_u = (u+1)/2*2048, pix_v = (v+1)/2*1152
+								   | 0  0  1  0 |
+	*/
+
+	//translate matrix to eigen
+	CameraViewTransform <<  pCameraViewTransform.m13, pCameraViewTransform.m11, -pCameraViewTransform.m12, -pCameraViewTransform.m34,
+							pCameraViewTransform.m23, pCameraViewTransform.m21, -pCameraViewTransform.m22,  pCameraViewTransform.m14,
+							pCameraViewTransform.m33, pCameraViewTransform.m31, -pCameraViewTransform.m32,  pCameraViewTransform.m24,
+							pCameraViewTransform.m41, pCameraViewTransform.m42,  pCameraViewTransform.m43,  pCameraViewTransform.m44;
+
+	CameraProjectionTransform << pCameraProjectionTransform.m11, pCameraProjectionTransform.m12, -pCameraProjectionTransform.m13, pCameraProjectionTransform.m14,
+								 pCameraProjectionTransform.m21, pCameraProjectionTransform.m22, -pCameraProjectionTransform.m23, pCameraProjectionTransform.m24,
+								 pCameraProjectionTransform.m31, pCameraProjectionTransform.m32, -pCameraProjectionTransform.m33, pCameraProjectionTransform.m34,
+								 pCameraProjectionTransform.m41, pCameraProjectionTransform.m42, -pCameraProjectionTransform.m43, pCameraProjectionTransform.m44;
+
 }
 
 Eigen::Vector2f imageRep::ImageRepresentation::imageSpaceGradientCompare(ImageRepresentation& otherImage, Eigen::Vector2f ownPos, Eigen::Vector2f otherPos, int patchSize)
@@ -68,23 +84,25 @@ void imageRep::ImageRepresentation::setPositions(Eigen::MatrixXd V)
 	//Vpos = (CameraProjectionTransform*CameraViewTransform*V.transpose()).transpose();
 }
 
-//compute 3D projection of 2D point "pixel" onto surface defined by normal "surface_normal" and vertex "vertex" (Raycasting ?)
-Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, Eigen::Vector3d pixel){
+//compute 3D projection of 2D point "pixel" onto surface defined by normal "surface_normal" and vertex "vertex"
+Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Point2d pixel){
 
-	// get orientation of camera
-	Eigen::Matrix3d R_cw = CameraViewTransform.block<3,3>(0,0).cast <double>();			// camera orientation matrix (maps from world CS to camera CS, expressed in world coordinates)
-	Eigen::Vector3d C_w = CameraViewTransform.block<3, 1>(0, 3).cast <double>();			// camera position in world frame (expressed in world coordinates)
+	// get ex- & intrinsics of camera
+	Eigen::Matrix3d R_wc = CameraViewTransform.block<3,3>(0,0).cast <double>();			// camera orientation matrix (camera to world)
+	Eigen::Vector3d C_w = CameraViewTransform.block<3, 1>(0, 3).cast <double>();		// camera position in world frame (expressed in world frame)
 	Eigen::Matrix3d K = CameraProjectionTransform.block<3,3>(0,0).cast <double>();		// camera calibration matrix
 
-	//get image coordinates of point
-	Eigen::Vector3d p_temp = K.inverse()*pixel;											// projecting vector in camera frame
-	Eigen::Vector3d p_w = R_cw.transpose()*p_temp;										// projecting vector in world frame
-	
-	// compute scale
-	double lambda = (vertex - C_w).dot(surface_normal)/(p_w.dot(surface_normal));
-	
-	// compute world frame points
-	Eigen::Vector3d P_w = C_w + lambda*p_w; //point in world frame
+	// Relative pixel position
+	double u = pixel.x / 2048.0 * 2.0 - 1.0;											// from pixel values to relative values following the convention
+	double v = pixel.y / 1152.0 * 2.0 - 1.0;
+	Eigen::Vector3d imgCoord(u, v, 1);													// homogenize
+
+	// compute intersection point of viewing ray and plane
+	Eigen::Vector3d p_temp = K.inverse()*imgCoord;										// image plane to camera frame
+	Eigen::Vector3d p_w = R_wc*p_temp;													// camera frame to world frame
+
+	double lambda = (vertex - C_w).dot(surface_normal) / (p_w.dot(surface_normal));
+	Eigen::Vector3d P_w = C_w + lambda*p_w;												//point in world frame
 	
 	return P_w;
 }
@@ -105,24 +123,28 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 	cv::Mat img_c2 = image2.ocvImage;
 	cv::Mat output;
 
-	// homogenize vertex
-	Eigen::Vector4d hVertex(vertex(0), vertex(1), vertex(2), 1);										// POTENTIAL ERROR: do we require 1 or -1 at last entry? In other words, does TX_cw
+	// get ex- & intrinsics of camera
+	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
+	Eigen::Vector3d C1_w = CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera1 position in world frame (expressed in world frame)
+	
+	Eigen::Matrix<double, 3, 3> R_wc2 = image2.CameraViewTransform.block<3, 3>(0, 0).cast <double>();	// camera2 orientation matrix (camera to world)
+	Eigen::Vector3d C2_w = image2.CameraViewTransform.block<3, 1>(0, 3).cast <double>();				// camera1 position in world frame (expressed in world frame)
+	
+	Eigen::Matrix3d K1 = CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();					// camera1 calibration matrix 
+	Eigen::Matrix3d K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();			// camera2 calibration matrix 
 
 	// computing center point of patch (projection of vertex into image 1)
-	Eigen::Matrix<double, 3, 4> T_c1w = CameraViewTransform.block<3, 4>(0, 0).cast <double>();			// camera transform matrix of camera 1
-	Eigen::Matrix<double, 3, 4> T_c2w = image2.CameraViewTransform.block<3, 4>(0, 0).cast <double>();	// camera transform matrix of camera 2
-	Eigen::Matrix3d K1 = CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();						// camera calibration matrix of camera 1
-	Eigen::Matrix3d K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();			// camera calibration matrix of camera 2
-
-	Eigen::Vector3d center_not_normalized = K1*T_c1w*hVertex;											// projecting vertex into image 1
-	double center_x = center_not_normalized(0) / center_not_normalized(2);								// x-coordinates of vertex projected into image1
-	double center_y = center_not_normalized(1) / center_not_normalized(2);								// y-coordinates of vertex projected into image1
+	Eigen::Vector3d VertInCam = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
+	double u = VertInCam(0) / VertInCam(2);																// u-coordinates of vertex projected into image1 ...
+	double v = VertInCam(1) / VertInCam(2);																// v-coordinates of vertex projected into image1 ...
+	double pix_u = (u + 1) / 2 * 2048;																	// ... expressed in pixel coordinates
+	double pix_v = (v + 1) / 2 * 1152;																	// ... expressed in pixel coordinates
 
 	// computing corners of patch in image 1 (homogeneous coordinates)
-	Eigen::Vector3d hp1_c1(center_x + patch_size.width / 2, center_y + patch_size.height / 2, 1);		// patch in image 1, lower right corner
-	Eigen::Vector3d hp2_c1(center_x - patch_size.width / 2, center_y + patch_size.height / 2, 1);		// patch in image 1, lower left corner
-	Eigen::Vector3d hp3_c1(center_x + patch_size.width / 2, center_y - patch_size.height / 2, 1);		// patch in image 1, upper right corner
-	Eigen::Vector3d hp4_c1(center_x - patch_size.width / 2, center_y - patch_size.height / 2, 1);		// patch in image 1, upper left corner
+	cv::Point2d hp1_c1(pix_u + patch_size.width / 2, pix_v + patch_size.height / 2);				// patch in image 1, lower right corner
+	cv::Point2d hp2_c1(pix_u - patch_size.width / 2, pix_v + patch_size.height / 2);				// patch in image 1, lower left corner
+	cv::Point2d hp3_c1(pix_u + patch_size.width / 2, pix_v - patch_size.height / 2);				// patch in image 1, upper right corner
+	cv::Point2d hp4_c1(pix_u - patch_size.width / 2, pix_v - patch_size.height / 2);				// patch in image 1, upper left corner
 
 	// computing 3D projections of patch corners
 	Eigen::Vector3d P1_w = project2dto3d(surface_normal, vertex, hp1_c1);									// Corner points of projected patch from image 1 in world frame
@@ -130,24 +152,18 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 	Eigen::Vector3d P3_w = project2dto3d(surface_normal, vertex, hp3_c1);
 	Eigen::Vector3d P4_w = project2dto3d(surface_normal, vertex, hp4_c1);
 
-	// homogenize 3D corner points of projected patch
-	Eigen::Vector4d hP1_w(P1_w(0), P1_w(1), P1_w(2), 1);
-	Eigen::Vector4d hP2_w(P2_w(0), P2_w(1), P2_w(2), 1);
-	Eigen::Vector4d hP3_w(P3_w(0), P3_w(1), P3_w(2), 1);
-	Eigen::Vector4d hP4_w(P4_w(0), P4_w(1), P4_w(2), 1);
-
 	// compute projection of 3d points into image 2 (homgeneous coordinates) ...
-	Eigen::Vector3d hp1_c2 = K2*T_c2w*hP1_w;
-	Eigen::Vector3d hp2_c2 = K2*T_c2w*hP2_w;
-	Eigen::Vector3d hp3_c2 = K2*T_c2w*hP3_w;
-	Eigen::Vector3d hp4_c2 = K2*T_c2w*hP4_w;
+	Eigen::Vector3d hp1_c2 = K2*R_wc2.transpose()*(P1_w - C2_w);
+	Eigen::Vector3d hp2_c2 = K2*R_wc2.transpose()*(P2_w - C2_w);
+	Eigen::Vector3d hp3_c2 = K2*R_wc2.transpose()*(P3_w - C2_w);
+	Eigen::Vector3d hp4_c2 = K2*R_wc2.transpose()*(P4_w - C2_w);
 
-	//  and normalize them to get the pixel coordinates which define the source frame for the perspective transform	
+	// and normalize them to get the pixel coordinates which define the source frame for the perspective transform	
 	cv::Point2f p_c2[4];
-	p_c2[0] = cv::Point2f(hp1_c2(0) / hp1_c2(2), hp1_c2(1) / hp1_c2(2));								// source frame for perspective transform, i.e. warped patch in image 2
-	p_c2[1] = cv::Point2f(hp2_c2(0) / hp2_c2(2), hp2_c2(1) / hp2_c2(2));
-	p_c2[2] = cv::Point2f(hp3_c2(0) / hp3_c2(2), hp3_c2(1) / hp3_c2(2));
-	p_c2[3] = cv::Point2f(hp4_c2(0) / hp4_c2(2), hp4_c2(1) / hp4_c2(2));
+	p_c2[0] = cv::Point2f((hp1_c2(0) / hp1_c2(2) + 1) / 2 * 2048, (hp1_c2(1) / hp1_c2(2) + 1) / 2 * 1152);								// source frame for perspective transform, i.e. warped patch in image 2
+	p_c2[1] = cv::Point2f((hp2_c2(0) / hp2_c2(2) + 1) / 2 * 2048, (hp2_c2(1) / hp2_c2(2) + 1) / 2 * 1152);
+	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * 2048, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * 1152);
+	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * 2048, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * 1152);
 
 	// preparing target frame for perspective transform
 	cv::Point2f p_c1[4];
