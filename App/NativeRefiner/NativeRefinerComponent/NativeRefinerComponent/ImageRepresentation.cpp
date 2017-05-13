@@ -134,23 +134,23 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 	Eigen::Matrix3d K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();			// camera2 calibration matrix 
 
 	// computing center point of patch (projection of vertex into image 1)
-	Eigen::Vector3d VertInCam = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
-	double u = VertInCam(0) / VertInCam(2);																// u-coordinates of vertex projected into image1 ...
-	double v = VertInCam(1) / VertInCam(2);																// v-coordinates of vertex projected into image1 ...
+	Eigen::Vector3d vertInImg = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
+	double u = vertInImg(0) / vertInImg(2);																// u-coordinates of vertex projected into image1 ...
+	double v = vertInImg(1) / vertInImg(2);																// v-coordinates of vertex projected into image1 ...
 	double pix_u = (u + 1) / 2 * 2048;																	// ... expressed in pixel coordinates
 	double pix_v = (v + 1) / 2 * 1152;																	// ... expressed in pixel coordinates
 
 	// computing corners of patch in image 1 (homogeneous coordinates)
-	cv::Point2d hp1_c1(pix_u + patch_size.width / 2, pix_v + patch_size.height / 2);				// patch in image 1, lower right corner
-	cv::Point2d hp2_c1(pix_u - patch_size.width / 2, pix_v + patch_size.height / 2);				// patch in image 1, lower left corner
-	cv::Point2d hp3_c1(pix_u + patch_size.width / 2, pix_v - patch_size.height / 2);				// patch in image 1, upper right corner
-	cv::Point2d hp4_c1(pix_u - patch_size.width / 2, pix_v - patch_size.height / 2);				// patch in image 1, upper left corner
+	cv::Point2d p1_c1(pix_u + patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower right corner
+	cv::Point2d p2_c1(pix_u - patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower left corner
+	cv::Point2d p3_c1(pix_u + patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper right corner
+	cv::Point2d p4_c1(pix_u - patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper left corner
 
 	// computing 3D projections of patch corners
-	Eigen::Vector3d P1_w = project2dto3d(surface_normal, vertex, hp1_c1);									// Corner points of projected patch from image 1 in world frame
-	Eigen::Vector3d P2_w = project2dto3d(surface_normal, vertex, hp2_c1);
-	Eigen::Vector3d P3_w = project2dto3d(surface_normal, vertex, hp3_c1);
-	Eigen::Vector3d P4_w = project2dto3d(surface_normal, vertex, hp4_c1);
+	Eigen::Vector3d P1_w = project2dto3d(surface_normal, vertex, p1_c1);									// Corner points of projected patch from image 1 in world frame
+	Eigen::Vector3d P2_w = project2dto3d(surface_normal, vertex, p2_c1);
+	Eigen::Vector3d P3_w = project2dto3d(surface_normal, vertex, p3_c1);
+	Eigen::Vector3d P4_w = project2dto3d(surface_normal, vertex, p4_c1);
 
 	// compute projection of 3d points into image 2 (homgeneous coordinates) ...
 	Eigen::Vector3d hp1_c2 = K2*R_wc2.transpose()*(P1_w - C2_w);
@@ -187,7 +187,7 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 	// So far, whoever calls this function has to calculate the patch in image 1 himself to correlate it with the one returned by this function - which is inefficient since we are doing the same at the beginning of this function as well...
 	// Suggestion: return (either explicit or by reference) both the patch of image 1 and the corresponding patch of image 2. We could also extend this function to also do the correlation 
 	// between the patches ...
-	cv::Rect patch(hp4_c1(0), hp4_c1(1), patch_size.width, patch_size.height);
+	cv::Rect patch(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);
 	cv::Mat correlation;
 	cv::matchTemplate(cv::Mat(img_c1, patch), output, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
 	return correlation.at<float>(0,0);

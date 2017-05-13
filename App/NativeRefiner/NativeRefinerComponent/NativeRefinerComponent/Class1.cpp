@@ -143,21 +143,23 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	double threshold = 0.0;				// threshold for visibility
 	bool visible = false;
 	
-	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();	// camera center in world frame
-	Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();								// point in world frame (vertex)
-	Eigen::Vector4d hP_w(P_w(0), P_w(1), P_w(2), 1);														// homogenized vertex
+	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
+	Eigen::Matrix<double, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera orientation matrix (camera to world)	
+	Eigen::Matrix<double, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();
 	
-	Eigen::Matrix<double, 3, 4> T_cw = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>()*images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>();
-	Eigen::Vector3d pixels_not_normalized = T_cw*hP_w;													// project vertex into image
-	Eigen::Vector3d P_c = images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>()*hP_w; //point in c1 frame
+	Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();								// point (vertex) in world frame (vertex)
+	
+	Eigen::Vector3d vertInCam = R_wc.transpose()*(P_w - C_w);											// ... in camera frame
+	Eigen::Vector3d vertInImg = K*vertInCam;															// ... in image frame, homgeneous
+
 
 	// check if vertex is in front of camera
-	if (P_c(2) > 0) {
-		double x_px = pixels_not_normalized(0) / pixels_not_normalized(2);							// normalize points in 2d image space
-		double y_px = pixels_not_normalized(1) / pixels_not_normalized(2);
+	if (vertInCam(2) > 0) {
+		double pix_u = (vertInImg(0) / vertInImg(2) + 1) / 2 * 2048;									// normalize and get pixel values
+		double pix_v = (vertInImg(1) / vertInImg(2) + 1) / 2 * 1152;
 
 		// check if vertex projects into image
-		if (x_px < images[thisView].x_size && y_px < images[thisView].y_size && x_px >= 0 && y_px >= 0) {
+		if (pix_u < images[thisView].x_size && pix_v < images[thisView].y_size && pix_u >= 0 && pix_v >= 0) {
 			
 			// check if patch is reasonably facing the camera using surface normal
 			if (model.VN.block<1, 3>(thisVertex, 0).transpose().dot((P_w - C_w).normalized()) > threshold) {
@@ -184,7 +186,5 @@ void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(int* adjustm
 	n = model.VN.block<1, 3>(vertex, 0).transpose();	// normal vector
 
 	p_current = p+step*step_size*n;
-	
-
 
 }
