@@ -84,7 +84,7 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 					if (visCount >= 2) {
 						secondSight = i;
 						correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
-						break;
+						return correlation.ToString();
 					}
 					else {
 						firstSight = i;
@@ -108,7 +108,7 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 
 
 		//return
-		return 	correlation.ToString();
+		return 	"no correlation found";
 		reporter.report(100.0);
 	});
 

@@ -93,8 +93,8 @@ Eigen::Vector3d imageRep::ImageRepresentation::project2dto3d(Eigen::Vector3d sur
 	Eigen::Matrix3d K = CameraProjectionTransform.block<3,3>(0,0).cast <double>();		// camera calibration matrix
 
 	// Relative pixel position
-	double u = pixel.x / 2048.0 * 2.0 - 1.0;											// from pixel values to relative values following the convention
-	double v = pixel.y / 1152.0 * 2.0 - 1.0;
+	double u = pixel.x /((double) x_size) * 2.0 - 1.0;											// from pixel values to relative values following the convention
+	double v = pixel.y /((double) y_size) * 2.0 - 1.0;
 	Eigen::Vector3d imgCoord(u, v, 1);													// homogenize
 
 	// compute intersection point of viewing ray and plane
@@ -140,6 +140,10 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 	double pix_u = (u + 1) / 2 * 2048;																	// ... expressed in pixel coordinates
 	double pix_v = (v + 1) / 2 * 1152;																	// ... expressed in pixel coordinates
 
+	// check if out-of-bounds (conservative - could do striclty less-than)
+	if (pix_u <= patch_size.width / 2 || pix_v <= patch_size.height / 2)
+		return 0;
+	
 	// computing corners of patch in image 1 (homogeneous coordinates)
 	cv::Point2d p1_c1(pix_u + patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower right corner
 	cv::Point2d p2_c1(pix_u - patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower left corner
