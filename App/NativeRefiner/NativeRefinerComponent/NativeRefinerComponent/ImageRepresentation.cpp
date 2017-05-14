@@ -137,11 +137,12 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 	Eigen::Vector3d vertInImg = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
 	double u = vertInImg(0) / vertInImg(2);																// u-coordinates of vertex projected into image1 ...
 	double v = vertInImg(1) / vertInImg(2);																// v-coordinates of vertex projected into image1 ...
-	double pix_u = (u + 1) / 2 * 2048;																	// ... expressed in pixel coordinates
-	double pix_v = (v + 1) / 2 * 1152;																	// ... expressed in pixel coordinates
+	double pix_u = (u + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
+	double pix_v = (v + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
 
 	// check if out-of-bounds (conservative - could do striclty less-than)
-	if (pix_u <= patch_size.width / 2 || pix_v <= patch_size.height / 2)
+	if (pix_u <= patch_size.width / 2 || pix_v <= patch_size.height / 2 || 
+		pix_u >= x_size - patch_size.width / 2 || pix_v >= y_size - patch_size.height / 2)
 		return 0;
 	
 	// computing corners of patch in image 1 (homogeneous coordinates)
