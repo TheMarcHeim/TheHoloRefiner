@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "ImageRepresentation.h"
-#include <iostream>
-
 
 imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 	Windows::Foundation::Numerics::float4x4 pCameraViewTransform,
@@ -18,12 +16,6 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
 	x_size = ocvImage.cols;
 	y_size = ocvImage.rows; // really needed if we have width and height? (l. 12)
-
-
-	//set ksize = 5 for local minima prevention
-	//one for x and y
-	cv::Sobel(ocvImage, dXImg, -1, 1, 0, 5); // not needed anymore... right?
-	cv::Sobel(ocvImage, dYImg, -1, 0, 1, 5);
 
 
 	/*CONVENTION:
@@ -51,39 +43,6 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 								 pCameraProjectionTransform.m31, pCameraProjectionTransform.m32, -pCameraProjectionTransform.m33, pCameraProjectionTransform.m34,
 								 pCameraProjectionTransform.m41, pCameraProjectionTransform.m42, -pCameraProjectionTransform.m43, pCameraProjectionTransform.m44;
 
-}
-
-// function not needed anymore
-Eigen::Vector2f imageRep::ImageRepresentation::imageSpaceGradientCompare(ImageRepresentation& otherImage, Eigen::Vector2f ownPos, Eigen::Vector2f otherPos, int patchSize)
-{
-	//prepare patch rectangles
-	int length = (patchSize - 1) << 1;
-	cv::Rect ownRect(ownPos[0]- length, ownPos[1]-length, patchSize, patchSize);
-	cv::Rect otherRect(otherPos[0] - length, otherPos[0] - length, patchSize, patchSize);
-	cv::Mat XXX, YYY;
-	//exploit matchTemplate function:
-	//when used in this way it computes the derivation in x and y directions
-	cv::matchTemplate(
-		cv::Mat(dXImg, ownRect),
-		cv::Mat(otherImage.ocvImage, otherRect),
-		XXX, cv::TemplateMatchModes::TM_CCORR);
-	cv::matchTemplate(
-		cv::Mat(dYImg, ownRect),
-		cv::Mat(otherImage.ocvImage, otherRect),
-		YYY, cv::TemplateMatchModes::TM_CCORR);
-	//extract eigen gradient vector
-	//TODO: maybe change signs :P
-	return Eigen::Vector2f(
-		-XXX.at<float>(0,0),
-		-YYY.at<float>(0,0));
-}
-
-// function not needed anymore
-void imageRep::ImageRepresentation::setPositions(Eigen::MatrixXd V)
-{
-	//problem: CameraProjectionTransform and CameraViewTransform are float matrices...
-	//TODO: convert them to double
-	//Vpos = (CameraProjectionTransform*CameraViewTransform*V.transpose()).transpose();
 }
 
 //compute 3D projection of 2D point "pixel" onto surface defined by normal "surface_normal" and vertex "vertex"

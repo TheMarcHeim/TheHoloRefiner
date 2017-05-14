@@ -17,34 +17,24 @@ namespace imageRep {
 			Windows::Foundation::Numerics::float4x4 pCameraViewTransform,
 			Windows::Foundation::Numerics::float4x4 pCameraProjectionTransform);
 
-
 		/// <summary>
-		/// This is used for the simplified case where only rectangular patches in image space are compared.
-		/// It gives back the gradient of the autocorrelation corresponding to a shift of the 'other' image. 
+		/// compute 3D projection of 2D point "pixel" onto surface defined by normal "surface_normal" and vertex "vertex"
 		/// </summary>
-		Eigen::Vector2f imageSpaceGradientCompare(ImageRepresentation& otherImage, Eigen::Vector2f ownPos, Eigen::Vector2f otherPos, int patchSize);
-
 		Eigen::Vector3d project2dto3d(Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Point2d p);
 		
+		/// <summary>
+		/// Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
+		/// </summary>
 		float computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
 		
-		/// <summary>
-		/// step that computes positions in image space 
-		/// </summary>
-		void setPositions(Eigen::MatrixXd V);
-
 		const std::string filename;
 		std::vector<unsigned char> image;
 		cv::Mat ocvImage;
 		unsigned width, height;
+		int x_size, y_size;
 		Eigen::Matrix4f CameraViewTransform;
 		Eigen::Matrix4f CameraProjectionTransform;
-		Eigen::Matrix<double, -1, 2> Vpos;
-	    int x_size;
-		int y_size;
 
 	private:
-		cv::Mat dXImg;
-		cv::Mat dYImg;
 	};
 }

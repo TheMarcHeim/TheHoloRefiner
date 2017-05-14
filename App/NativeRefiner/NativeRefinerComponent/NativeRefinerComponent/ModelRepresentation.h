@@ -7,7 +7,6 @@
 #include<igl/cotmatrix.h>
 #include<igl/readOBJ.h>
 #include<ImageRepresentation.h>
-//#define NUMBER_STEPS_DEPTH_SEARCH 11 // to be experimented with - later implement in a parameter file preferably
 
 //use this for internal representation
 namespace modelRep {
@@ -24,14 +23,13 @@ namespace modelRep {
 		void subDivide();
 
 		/// <summary>
-		/// Make refinement step for image pair
+		/// Load object file
 		/// </summary>
-		float AdjustVertex(imageRep::ImageRepresentation& I, imageRep::ImageRepresentation& J, int vertex);
-
-		void Refine(int numIt, double stepSize);
-
 		bool loadFile(std::string path);
 
+		/// <summary>
+		/// compute normals at vertices
+		/// </summary>
 		void computeNormals();
 		
 		int nTriang;

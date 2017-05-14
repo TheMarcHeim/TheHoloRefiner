@@ -9,7 +9,7 @@
 #include "ImageRepresentation.h"
 #include <string>
 #include <Eigen/StdVector>
-//#define NUMBER_STEPS_DEPTH_SEARCH  11 //should be an odd number, center = original vertex
+
 
 namespace NativeRefinerComponent
 {
@@ -94,6 +94,5 @@ namespace NativeRefinerComponent
 		cv::Size patch_size;
 		int nImages;
 		Eigen::MatrixXi visibility; //rows: vertices, columns: images
-
 	};
 }
