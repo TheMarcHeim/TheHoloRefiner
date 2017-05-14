@@ -41,10 +41,10 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 	*/
 
 	//translate matrix to eigen
-	CameraViewTransform <<  pCameraViewTransform.m13, pCameraViewTransform.m11, -pCameraViewTransform.m12, -pCameraViewTransform.m34,
-							pCameraViewTransform.m23, pCameraViewTransform.m21, -pCameraViewTransform.m22,  pCameraViewTransform.m14,
-							pCameraViewTransform.m33, pCameraViewTransform.m31, -pCameraViewTransform.m32,  pCameraViewTransform.m24,
-							pCameraViewTransform.m41, pCameraViewTransform.m42,  pCameraViewTransform.m43,  pCameraViewTransform.m44;
+	CameraViewTransform <<  -pCameraViewTransform.m31, pCameraViewTransform.m32, pCameraViewTransform.m33,-pCameraViewTransform.m34,
+							 pCameraViewTransform.m11,-pCameraViewTransform.m12,-pCameraViewTransform.m13, pCameraViewTransform.m14,
+							 pCameraViewTransform.m21,-pCameraViewTransform.m22,-pCameraViewTransform.m23, pCameraViewTransform.m24,
+							 pCameraViewTransform.m41, pCameraViewTransform.m42, pCameraViewTransform.m43, pCameraViewTransform.m44;
 
 	CameraProjectionTransform << pCameraProjectionTransform.m11, pCameraProjectionTransform.m12, -pCameraProjectionTransform.m13, pCameraProjectionTransform.m14,
 								 pCameraProjectionTransform.m21, pCameraProjectionTransform.m22, -pCameraProjectionTransform.m23, pCameraProjectionTransform.m24,
