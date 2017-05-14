@@ -9,7 +9,7 @@
 #include "ImageRepresentation.h"
 #include <string>
 #include <Eigen/StdVector>
-#define NUMBER_STEPS_DEPTH_SEARCH  10
+#define NUMBER_STEPS_DEPTH_SEARCH  11 //should be an odd number, center = original vertex
 
 namespace NativeRefinerComponent
 {
@@ -80,14 +80,14 @@ namespace NativeRefinerComponent
 		/// <summary>
 		/// Async task that refines the reconstruction
 		/// </summary>
-		void computeAdjustmentScores(int* adjustmentScores, int vertex);
+		void computeAdjustmentScores(float* adjustmentScores, int vertex, int view1, int view2);
 
 	private:
 		modelRep::ModelRepresentation model;
 		std::vector<imageRep::ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
-		
+		cv::Size patch_size;// (7, 7);
 		int nImages;
 		Eigen::MatrixXi visibility; //rows: vertices, columns: images
-		int adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
+		//int adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
 	};
 }

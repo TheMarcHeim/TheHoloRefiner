@@ -67,24 +67,26 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 		int visCount = 0;
 		int firstSight = 0;
 		int secondSight = 0;
-		cv::Size patch_size(3, 3);
 		float correlation;
+		patch_size = cv::Size(7, 7);
+		float adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
 
 		bingo = computeVisibility();
 
 
-		// loop through all vertices and images, find pairs and compute correlation
-		
+		// loop through all vertices and images, find pairs and compute 
 		for (int v = 0; v < model.nVert; v++) {
 			visCount = 0;
 			for (int i = 0; i < nImages; i++) {
-				if (visibility(v,i)==1) {
+				if (visibility(v, i) == 1) {
 					visCount++;
-					
+
 					if (visCount >= 2) {
 						secondSight = i;
-						correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
-						return correlation.ToString();
+						computeAdjustmentScores(adjustmentScores, v, firstSight, secondSight);
+						//correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
+						
+						return adjustmentScores[10].ToString();
 					}
 					else {
 						firstSight = i;
@@ -94,6 +96,8 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 			}
 		}
 		
+
+
 
 		
 		// Show vertex in a window
@@ -157,8 +161,8 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 
 	// check if vertex is in front of camera
 	if (vertInCam(2) > 0) {
-		double pix_u = (vertInImg(0) / vertInImg(2) + 1) / 2 * 2048;									// normalize and get pixel values
-		double pix_v = (vertInImg(1) / vertInImg(2) + 1) / 2 * 1152;
+		double pix_u = (vertInImg(0) / vertInImg(2) + 1) / 2 * images [thisView].x_size;									// normalize and get pixel values
+		double pix_v = (vertInImg(1) / vertInImg(2) + 1) / 2 * images[thisView].y_size;
 
 		// check if vertex projects into image
 		if (pix_u < images[thisView].x_size && pix_v < images[thisView].y_size && pix_u >= 0 && pix_v >= 0) {
@@ -172,24 +176,25 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	return visible;
 }
 
-void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(int* adjustmentScores, int vertex) {
+void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(float* adjustmentScores, int vertex, int view1, int view2) {
 
 	Eigen::Vector3d p(0, 0, 0);
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
+	double step_size = 0.05;
 
-	int c1 = 0;
-	int c2 = 0;
-
-	int step = 1;
-	double step_size = 2;
-
+	n << model.VN.block<1, 3>(vertex, 0).transpose();
+	p << model.V.block<1, 3>(vertex, 0).transpose();
 		
-	p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
-
-	n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
-																	  // it is very unlikely that they use different conventions in the same .obj file ...
-
-	p_current = p+step*step_size*n;
+	//p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
+	//n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
+																  // it is very unlikely that they use different conventions in the same .obj file ...
+	p_current = p - n*step_size*NUMBER_STEPS_DEPTH_SEARCH/2; // start at negative position along normal
+	
+	for (int i = 0; i < NUMBER_STEPS_DEPTH_SEARCH; i++) {
+		p_current += step_size*n;
+		adjustmentScores[i] += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
+	} 
+	
 
 }
