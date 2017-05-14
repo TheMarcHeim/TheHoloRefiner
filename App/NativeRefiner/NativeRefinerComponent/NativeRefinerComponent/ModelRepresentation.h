@@ -33,15 +33,13 @@ namespace modelRep {
 		
 		int nTriang;
 		int nVert;
-		
-		//int nImg;				   //#images
-		 //Eigen::MatrixXi VertexCam; //Which cameras see which vertices (nVert x nImg)
-		//std::vector <imageRep::ImageRepresentation> views;
 
 
 		Eigen::MatrixXd V; //vertices
 		Eigen::MatrixXi F;
 		Eigen::MatrixXd VN; // vertex normals (?)
+	//	Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores
+	//	Eigen::MatrixXi nVertexObservations; // counter needed to normalize adjustmentScores
 		void computeNormals();
 	private:
 	};

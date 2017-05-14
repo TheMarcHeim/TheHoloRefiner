@@ -34,6 +34,7 @@ void NativeRefinerComponent::NativeRefiner::addPicture(Platform::String^ path, W
 	images.push_back(
 		imageRep::ImageRepresentation(upath, CameraViewTransform, CameraProjectionTransform));
 	nImages++;
+	std::printf("Printf works!");
 }
 
 void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String^ path)
@@ -66,24 +67,26 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 		int visCount = 0;
 		int firstSight = 0;
 		int secondSight = 0;
-		cv::Size patch_size(3, 3);
 		float correlation;
+		patch_size = cv::Size(7, 7);
+		float adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
 
 		bingo = computeVisibility();
 
 
-		// loop through all vertices and images, find pairs and compute correlation
-		
+		// loop through all vertices and images, find pairs and compute 
 		for (int v = 0; v < model.nVert; v++) {
 			visCount = 0;
 			for (int i = 0; i < nImages; i++) {
-				if (visibility(v,i)==1) {
+				if (visibility(v, i) == 1) {
 					visCount++;
-					
+
 					if (visCount >= 2) {
 						secondSight = i;
-						correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
-						break;
+						computeAdjustmentScores(adjustmentScores, v, firstSight, secondSight);
+						//correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
+						
+						return adjustmentScores[10].ToString();
 					}
 					else {
 						firstSight = i;
@@ -93,6 +96,8 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 			}
 		}
 		
+
+
 
 		
 		// Show vertex in a window
@@ -107,7 +112,7 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 
 
 		//return
-		return 	correlation.ToString();
+		return 	"no correlation found";
 		reporter.report(100.0);
 	});
 
@@ -142,24 +147,28 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	double threshold = 0.0;				// threshold for visibility
 	bool visible = false;
 	
-	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();	// camera center in world frame
-	Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();								// point in world frame (vertex)
-	Eigen::Vector4d hP_w(P_w(0), P_w(1), P_w(2), 1);														// homogenized vertex
+	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
+	Eigen::Matrix<double, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera orientation matrix (camera to world)	
+	Eigen::Matrix<double, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();
 	
-	Eigen::Matrix<double, 3, 4> T_cw = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>()*images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>();
-	Eigen::Vector3d pixels_not_normalized = T_cw*hP_w;													// project vertex into image
-	Eigen::Vector3d P_c = images[thisView].CameraViewTransform.block<3, 4>(0, 0).cast <double>()*hP_w; //point in c1 frame
+	//Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();								// -> in form (y,z,x), we don't want this
+	Eigen::Vector3d P_w(model.V(thisVertex,2), model.V(thisVertex, 0), model.V(thisVertex, 1));			// Instead, permute to get it in form (x,y,z) and to be consistent with new convention.
+	Eigen::Vector3d N_w(model.VN(thisVertex, 2), model.VN(thisVertex, 0), model.VN(thisVertex, 1));		// Same for normals. IDEALLY we could reformat everything directly when loading the model TBD
+	
+	Eigen::Vector3d vertInCam = R_wc.transpose()*(P_w - C_w);											// ... in camera frame
+	Eigen::Vector3d vertInImg = K*vertInCam;															// ... in image frame, homgeneous
+
 
 	// check if vertex is in front of camera
-	if (P_c(2) > 0) {
-		double x_px = pixels_not_normalized(0) / pixels_not_normalized(2);							// normalize points in 2d image space
-		double y_px = pixels_not_normalized(1) / pixels_not_normalized(2);
+	if (vertInCam(2) > 0) {
+		double pix_u = (vertInImg(0) / vertInImg(2) + 1) / 2 * images [thisView].x_size;									// normalize and get pixel values
+		double pix_v = (vertInImg(1) / vertInImg(2) + 1) / 2 * images[thisView].y_size;
 
 		// check if vertex projects into image
-		if (x_px < images[thisView].x_size && y_px < images[thisView].y_size && x_px >= 0 && y_px >= 0) {
+		if (pix_u < images[thisView].x_size && pix_v < images[thisView].y_size && pix_u >= 0 && pix_v >= 0) {
 			
 			// check if patch is reasonably facing the camera using surface normal
-			if (model.VN.block<1, 3>(thisVertex, 0).transpose().dot((P_w - C_w).normalized()) > threshold) {
+			if (N_w.dot((P_w - C_w).normalized()) > threshold) {
 				visible = true;
 			}
 		}
@@ -167,23 +176,25 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	return visible;
 }
 
-void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(int* adjustmentScores, int vertex) {
+void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(float* adjustmentScores, int vertex, int view1, int view2) {
 
 	Eigen::Vector3d p(0, 0, 0);
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
+	double step_size = 0.05;
 
-	int c1 = 0;
-	int c2 = 0;
-
-	int step = 1;
-	double step_size = 2;
-
-	p = model.V.block<1, 3>(vertex, 0).transpose();		// point in world frame (vertex)
-	n = model.VN.block<1, 3>(vertex, 0).transpose();	// normal vector
-
-	p_current = p+step*step_size*n;
+	n << model.VN.block<1, 3>(vertex, 0).transpose();
+	p << model.V.block<1, 3>(vertex, 0).transpose();
+		
+	//p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
+	//n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
+																  // it is very unlikely that they use different conventions in the same .obj file ...
+	p_current = p - n*step_size*NUMBER_STEPS_DEPTH_SEARCH/2; // start at negative position along normal
 	
-
+	for (int i = 0; i < NUMBER_STEPS_DEPTH_SEARCH; i++) {
+		p_current += step_size*n;
+		adjustmentScores[i] += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
+	} 
+	
 
 }
