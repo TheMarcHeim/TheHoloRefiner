@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include "Class1.h"
+#include "NativeRefiner.h"
 #include <ppltasks.h>
 #include <concurrent_vector.h>
 #include <iostream>
