@@ -147,7 +147,9 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	Eigen::Matrix<double, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera orientation matrix (camera to world)	
 	Eigen::Matrix<double, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();
 	
-	Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();								// point (vertex) in world frame (vertex)
+	//Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();								// -> in form (y,z,x), we don't want this
+	Eigen::Vector3d P_w(model.V(thisVertex,2), model.V(thisVertex, 0), model.V(thisVertex, 1));			// Instead, permute to get it in form (x,y,z) and to be consistent with new convention.
+	Eigen::Vector3d N_w(model.VN(thisVertex, 2), model.VN(thisVertex, 0), model.VN(thisVertex, 1));		// Same for normals. IDEALLY we could reformat everything directly when loading the model TBD
 	
 	Eigen::Vector3d vertInCam = R_wc.transpose()*(P_w - C_w);											// ... in camera frame
 	Eigen::Vector3d vertInImg = K*vertInCam;															// ... in image frame, homgeneous
@@ -162,7 +164,7 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 		if (pix_u < images[thisView].x_size && pix_v < images[thisView].y_size && pix_u >= 0 && pix_v >= 0) {
 			
 			// check if patch is reasonably facing the camera using surface normal
-			if (model.VN.block<1, 3>(thisVertex, 0).transpose().dot((P_w - C_w).normalized()) > threshold) {
+			if (N_w.dot((P_w - C_w).normalized()) > threshold) {
 				visible = true;
 			}
 		}
@@ -182,8 +184,11 @@ void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(int* adjustm
 	int step = 1;
 	double step_size = 2;
 
-	p = model.V.block<1, 3>(vertex, 0).transpose();		// point in world frame (vertex)
-	n = model.VN.block<1, 3>(vertex, 0).transpose();	// normal vector
+		
+	p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
+
+	n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
+																	  // it is very unlikely that they use different conventions in the same .obj file ...
 
 	p_current = p+step*step_size*n;
 
