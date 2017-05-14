@@ -1,9 +1,9 @@
 ﻿#include "pch.h"
 #include "Class1.h"
-
 #include <ppltasks.h>
 #include <concurrent_vector.h>
 #include <iostream>
+#include <fstream>
 
 
 using namespace NativeRefinerComponent;
@@ -18,6 +18,7 @@ using namespace Windows::UI::Core;
 
 NativeRefiner::NativeRefiner()
 {
+	patch_size = cv::Size(7, 7); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefinerComponent::NativeRefiner::reset()
@@ -34,7 +35,6 @@ void NativeRefinerComponent::NativeRefiner::addPicture(Platform::String^ path, W
 	images.push_back(
 		imageRep::ImageRepresentation(upath, CameraViewTransform, CameraProjectionTransform));
 	nImages++;
-	std::printf("Printf works!");
 }
 
 void NativeRefinerComponent::NativeRefiner::addInitModel(Platform::String^ path)
@@ -54,69 +54,13 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 	
 	//async task
 	return create_async([this](progress_reporter<double> reporter)-> Platform::String^ {
-		//do the refining
-		//throw ref new Platform::NotImplementedException();
-
-		//loop through all images
-		//for (std::vector<imageRep::ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>>::iterator it = images.begin(); it != images.end(); ++it) {
-		//}
-
-		int testImg = 0;
-		int testVertex = 127;
-		int bingo = 21340;
-		int visCount = 0;
-		int firstSight = 0;
-		int secondSight = 0;
-		float correlation;
-		patch_size = cv::Size(7, 7);
-		float adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
-
-		bingo = computeVisibility();
-
-
-		// loop through all vertices and images, find pairs and compute 
-		for (int v = 0; v < model.nVert; v++) {
-			visCount = 0;
-			for (int i = 0; i < nImages; i++) {
-				if (visibility(v, i) == 1) {
-					visCount++;
-
-					if (visCount >= 2) {
-						secondSight = i;
-						computeAdjustmentScores(adjustmentScores, v, firstSight, secondSight);
-						//correlation = images[i].computeDistortedPatchCorrelation(images[firstSight], model.VN.block<1, 3>(v, 0).transpose(), model.V.block<1, 3>(v, 0).transpose(), patch_size);
-						
-						return adjustmentScores[10].ToString();
-					}
-					else {
-						firstSight = i;
-					}
-
-				}
-			}
-		}
-		
-
-
-
-		
-		// Show vertex in a window
-		/*
-		cv::namedWindow("test image",WINDOW_AUTOSIZE);
-		cv::imshow("test image", images[testImg]);
-		cv::Point2i ctr(50, 50);
-		const cv::Scalar color(0, 100, 250);
-		cv::circle(images[testImg].ocvImage, ctr, 50, color);
-		cv::imwrite("test.png", images[testImg].ocvImage);
-	*/
-
+		// compute adjustment scores
+		computeAdjustmentScores();
 
 		//return
-		return 	"no correlation found";
+		return 	model.adjustmentScores(10,397).ToString(); // return random adjustment score
 		reporter.report(100.0);
 	});
-
-
 }
 
 int NativeRefinerComponent::NativeRefiner::getSize() {
@@ -176,25 +120,63 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 	return visible;
 }
 
-void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores(float* adjustmentScores, int vertex, int view1, int view2) {
-
+// This function computes adjustment scores for just one given vertex
+void NativeRefinerComponent::NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int view2) {
+	
 	Eigen::Vector3d p(0, 0, 0);
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
-	double step_size = 0.05;
+	double step_size = 0.05; // to be experimented with - later implement in a parameter file preferably
 
-	n << model.VN.block<1, 3>(vertex, 0).transpose();
+	n << model.VN.block<1, 3>(vertex, 0).transpose(); //
 	p << model.V.block<1, 3>(vertex, 0).transpose();
 		
 	//p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
 	//n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
 																  // it is very unlikely that they use different conventions in the same .obj file ...
-	p_current = p - n*step_size*NUMBER_STEPS_DEPTH_SEARCH/2; // start at negative position along normal
 	
-	for (int i = 0; i < NUMBER_STEPS_DEPTH_SEARCH; i++) {
-		p_current += step_size*n;
-		adjustmentScores[i] += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
-	} 
+// Note from Nico (14.5. 19.30): it seems that this is NOT the case. If we switch like you suggested,
+// every single vertex projects outside the image and thus gives a zero adjustment score...
+// this makes NO sense... why does it need to be flipped inside isVisible for example?
 	
+	p_current = p - n*step_size*model.nStepsDepthSearch/2; // start at negative position along normal
 
+	model.nVertexObservations(vertex)++; // needed for averaging
+	for (int i = 0; i < model.nStepsDepthSearch; i++) {
+		p_current += step_size*n;
+		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-1);
+		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
+		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
+	} 
+}
+
+// This function computes adjustment scores for all vertices and pairs
+void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores() {
+
+	int bingo = 0; // dummy variable used for debugging
+	int visCount = 0;
+	int firstSight = 0;
+	int secondSight = 0;
+	
+	// loop through all vertices and images, find pairs and compute 
+	// Note: only looks at pairs including first image
+	bingo = computeVisibility();
+	for (int v = 0; v < model.nVert; v++) {
+		visCount = 0;
+		for (int i = 0; i < nImages; i++) {
+			if (visibility(v, i) == 1) {
+				visCount++;
+				if (visCount >= 2) { // compute adjustment scores for "every" pair
+					secondSight = i;
+					computeVertexAdjustmentScores(v, firstSight, secondSight);
+					bingo++; //just a dummy to stop calculation at some point
+					if (bingo >= 1000)
+						return;
+				}
+				else {
+					firstSight = i;
+				}
+			}
+		}
+	}
 }

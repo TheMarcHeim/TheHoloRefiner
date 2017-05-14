@@ -7,6 +7,7 @@
 #include<igl/cotmatrix.h>
 #include<igl/readOBJ.h>
 #include<ImageRepresentation.h>
+//#define NUMBER_STEPS_DEPTH_SEARCH 11 // to be experimented with - later implement in a parameter file preferably
 
 //use this for internal representation
 namespace modelRep {
@@ -30,17 +31,18 @@ namespace modelRep {
 		void Refine(int numIt, double stepSize);
 
 		bool loadFile(std::string path);
+
+		void computeNormals();
 		
 		int nTriang;
 		int nVert;
-
-
+		int nStepsDepthSearch;
 		Eigen::MatrixXd V; //vertices
 		Eigen::MatrixXi F;
-		Eigen::MatrixXd VN; // vertex normals (?)
-	//	Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores
-	//	Eigen::MatrixXi nVertexObservations; // counter needed to normalize adjustmentScores
-		void computeNormals();
+		Eigen::MatrixXd VN; // vertex normals
+		Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores
+		Eigen::VectorXi nVertexObservations; // counter needed to normalize adjustmentScores
+
 	private:
 	};
 }

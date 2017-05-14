@@ -17,12 +17,12 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 	//prepare openCV buffers
 	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
 	x_size = ocvImage.cols;
-	y_size = ocvImage.rows;
+	y_size = ocvImage.rows; // really needed if we have width and height? (l. 12)
 
 
 	//set ksize = 5 for local minima prevention
 	//one for x and y
-	cv::Sobel(ocvImage, dXImg, -1, 1, 0, 5);
+	cv::Sobel(ocvImage, dXImg, -1, 1, 0, 5); // not needed anymore... right?
 	cv::Sobel(ocvImage, dYImg, -1, 0, 1, 5);
 
 
@@ -53,6 +53,7 @@ imageRep::ImageRepresentation::ImageRepresentation(std::string filename,
 
 }
 
+// function not needed anymore
 Eigen::Vector2f imageRep::ImageRepresentation::imageSpaceGradientCompare(ImageRepresentation& otherImage, Eigen::Vector2f ownPos, Eigen::Vector2f otherPos, int patchSize)
 {
 	//prepare patch rectangles
@@ -77,6 +78,7 @@ Eigen::Vector2f imageRep::ImageRepresentation::imageSpaceGradientCompare(ImageRe
 		-YYY.at<float>(0,0));
 }
 
+// function not needed anymore
 void imageRep::ImageRepresentation::setPositions(Eigen::MatrixXd V)
 {
 	//problem: CameraProjectionTransform and CameraViewTransform are float matrices...
@@ -165,10 +167,10 @@ float imageRep::ImageRepresentation::computeDistortedPatchCorrelation(ImageRepre
 
 	// and normalize them to get the pixel coordinates which define the source frame for the perspective transform	
 	cv::Point2f p_c2[4];
-	p_c2[0] = cv::Point2f((hp1_c2(0) / hp1_c2(2) + 1) / 2 * 2048, (hp1_c2(1) / hp1_c2(2) + 1) / 2 * 1152);								// source frame for perspective transform, i.e. warped patch in image 2
-	p_c2[1] = cv::Point2f((hp2_c2(0) / hp2_c2(2) + 1) / 2 * 2048, (hp2_c2(1) / hp2_c2(2) + 1) / 2 * 1152);
-	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * 2048, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * 1152);
-	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * 2048, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * 1152);
+	p_c2[0] = cv::Point2f((hp1_c2(0) / hp1_c2(2) + 1) / 2 * x_size, (hp1_c2(1) / hp1_c2(2) + 1) / 2 * y_size);								// source frame for perspective transform, i.e. warped patch in image 2
+	p_c2[1] = cv::Point2f((hp2_c2(0) / hp2_c2(2) + 1) / 2 * x_size, (hp2_c2(1) / hp2_c2(2) + 1) / 2 * y_size);
+	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * x_size, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * y_size);
+	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * x_size, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * y_size);
 
 	// preparing target frame for perspective transform
 	cv::Point2f p_c1[4];

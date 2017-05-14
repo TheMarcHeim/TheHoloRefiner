@@ -9,7 +9,7 @@
 #include "ImageRepresentation.h"
 #include <string>
 #include <Eigen/StdVector>
-#define NUMBER_STEPS_DEPTH_SEARCH  11 //should be an odd number, center = original vertex
+//#define NUMBER_STEPS_DEPTH_SEARCH  11 //should be an odd number, center = original vertex
 
 namespace NativeRefinerComponent
 {
@@ -68,26 +68,32 @@ namespace NativeRefinerComponent
 		int getNImages();
 
 		/// <summary>
-		/// Async task that refines the reconstruction
+		/// Function that computes which vertices are visible from which cameras. 
+		/// This data is stored in the visibility matrix (member of NativeRefiner)
 		/// </summary>
 		int computeVisibility();
 
 		/// <summary>
-		/// Async task that refines the reconstruction
+		/// Function to compute visibility of a given vertex from a given view
 		/// </summary>
 		bool isVisible(int thisView, int thisVertex);
 
 		/// <summary>
-		/// Async task that refines the reconstruction
+		/// Function to compute adjustment scores for a given vertex and two given views
 		/// </summary>
-		void computeAdjustmentScores(float* adjustmentScores, int vertex, int view1, int view2);
+		void computeVertexAdjustmentScores(int vertex, int view1, int view2);
+
+		/// <summary>
+		/// Function to compute adjustment scores for all pairs
+		/// </summary>
+		void computeAdjustmentScores();
 
 	private:
 		modelRep::ModelRepresentation model;
 		std::vector<imageRep::ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
-		cv::Size patch_size;// (7, 7);
+		cv::Size patch_size;
 		int nImages;
 		Eigen::MatrixXi visibility; //rows: vertices, columns: images
-		//int adjustmentScores[NUMBER_STEPS_DEPTH_SEARCH];
+
 	};
 }
