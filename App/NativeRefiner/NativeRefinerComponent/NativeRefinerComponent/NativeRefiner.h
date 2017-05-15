@@ -86,7 +86,7 @@ namespace NativeRefinerComponent
 		/// <summary>
 		/// Function to compute adjustment scores for all pairs
 		/// </summary>
-		void computeAdjustmentScores();
+		int computeAdjustmentScores();
 
 	private:
 		modelRep::ModelRepresentation model;

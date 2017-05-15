@@ -54,7 +54,7 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 		computeAdjustmentScores();
 
 		//return
-		return 	model.adjustmentScores(10,397).ToString(); // return random adjustment score
+		return model.adjustmentScores(7, 348).ToString(); // return random adjustment score
 		reporter.report(100.0);
 	});
 }
@@ -123,19 +123,14 @@ void NativeRefinerComponent::NativeRefiner::computeVertexAdjustmentScores(int ve
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
 	double step_size = 0.05; // to be experimented with - later implement in a parameter file preferably
-
-	n << model.VN.block<1, 3>(vertex, 0).transpose(); //
-	p << model.V.block<1, 3>(vertex, 0).transpose();
 		
-	//p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
-	//n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
+	p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
+	n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
 																  // it is very unlikely that they use different conventions in the same .obj file ...
 	
-// Note from Nico (14.5. 19.30): it seems that this is NOT the case. If we switch like you suggested,
-// every single vertex projects outside the image and thus gives a zero adjustment score...
-// this makes NO sense... why does it need to be flipped inside isVisible for example?
-	
 	p_current = p - n*step_size*model.nStepsDepthSearch/2; // start at negative position along normal
+
+	float temp; // just for visualisation in debugger
 
 	model.nVertexObservations(vertex)++; // needed for averaging
 	for (int i = 0; i < model.nStepsDepthSearch; i++) {
@@ -143,11 +138,12 @@ void NativeRefinerComponent::NativeRefiner::computeVertexAdjustmentScores(int ve
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-1);
 		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
+		temp = model.adjustmentScores(i, vertex); // to monitor in debugger while we don't have cout
 	} 
 }
 
 // This function computes adjustment scores for all vertices and pairs
-void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores() {
+int NativeRefinerComponent::NativeRefiner::computeAdjustmentScores() {
 
 	int bingo = 0; // dummy variable used for debugging
 	int visCount = 0;
@@ -167,7 +163,7 @@ void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores() {
 					computeVertexAdjustmentScores(v, firstSight, secondSight);
 					bingo++; //just a dummy to stop calculation at some point
 					if (bingo >= 1000)
-						return;
+						return v;
 				}
 				else {
 					firstSight = i;
@@ -175,39 +171,6 @@ void NativeRefinerComponent::NativeRefiner::computeAdjustmentScores() {
 			}
 		}
 	}
+	return 0;
 }
 
-/* TO DO
-
-To be answered:
-What do we iterate over, i.e. given set of images, which image pairs do we pick? Given a vertex v, there is a set I_v of images i
-in which vertex n is visible (-> normal at v times vector from camera i to vertex v greater than zero and assuming convex shapes).
-
-One, albeit quite expensive, approach could be:
-
-- For every image pair in I_v, calculate the distance by which vertex v is to be adjusted, then take the average
-and apply this for the refinement step (i.e. let the different camera pairs vote. Here, we could also choose different weights for
-the votes depending on the baseline of the respective image pairs, the viewing angle etc.)
-
-We could also only consider "begnine" image pairs, i.e. those which are most sensitive to a change in the position of the respective vertex and hence yield
-an accurate refinement distance. (i.e large angle between viewing direction and large baseline between the images).
-
-
-Different tasks:
-- Subdivision
-- Calculate normal at a vertex from the normals of the adjacent triangles (area weighted average?)
-- Vertex <- cameras (inside image frame, not occluded)
-- Forming image pairs fulfilling a criterion yet to be defined (cf above)
-- Given two image patches, calculate the distance by which the vertex will be shifted
-- Move a vertex given the desired distance and the vertex normal
-
-
-Pseudo:...
-
-For numIt iterations do:
-For every vertex (i=0:nVert-1) of the object,
-...
-...
-
-
-*/
