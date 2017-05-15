@@ -51,10 +51,10 @@ Windows::Foundation::IAsyncOperationWithProgress<Platform::String^, double>^ Nat
 	//async task
 	return create_async([this](progress_reporter<double> reporter)-> Platform::String^ {
 		// compute adjustment scores
-		computeAdjustmentScores();
+		//computeAdjustmentScores();
 
 		//return
-		return model.adjustmentScores(7, 348).ToString(); // return random adjustment score
+		return computeVisibility().ToString();// model.adjustmentScores(7, 348).ToString(); // return random adjustment score
 		reporter.report(100.0);
 	});
 }
@@ -101,14 +101,12 @@ bool NativeRefinerComponent::NativeRefiner::isVisible(int thisVertex, int thisVi
 
 	// check if vertex is in front of camera
 	if (vertInCam(2) > 0) {
-		double pix_u = (vertInImg(0) / vertInImg(2) + 1) / 2 * images [thisView].x_size;									// normalize and get pixel values
-		double pix_v = (vertInImg(1) / vertInImg(2) + 1) / 2 * images[thisView].y_size;
 
 		// check if vertex projects into image
-		if (pix_u < images[thisView].x_size && pix_v < images[thisView].y_size && pix_u >= 0 && pix_v >= 0) {
-			
+		if(vertInImg(0)>= -vertInImg(2) && vertInImg(0) <= vertInImg(2) && vertInImg(1) >= -vertInImg(2) && vertInImg(1) <= vertInImg(2)){
+	
 			// check if patch is reasonably facing the camera using surface normal
-			if (N_w.dot((P_w - C_w).normalized()) > threshold) {
+			if (N_w.dot((C_w - P_w).normalized()) > threshold) {
 				visible = true;
 			}
 		}
