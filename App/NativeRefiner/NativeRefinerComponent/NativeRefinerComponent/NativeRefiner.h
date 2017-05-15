@@ -8,6 +8,7 @@
 #include "ModelRepresentation.h"
 #include "ImageRepresentation.h"
 #include <string>
+#include <Eigen/Dense>
 #include <Eigen/StdVector>
 
 
