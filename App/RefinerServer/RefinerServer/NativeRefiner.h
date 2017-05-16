@@ -21,7 +21,7 @@
 		//	refiner.addpicture(path, CameraViewTransform, CameraProjectionTransform);
 		//refiner.addInitModel(path)
 		//var asyncOp = refiner.Refine()
-		///lambda for progress
+		//lambda for progress
 		//asyncOp.Progress = (asyncInfo, progress) =>
 		//	{do UI update of progress bar};
 		//var async pathOfRefinedMesh = await asyncOp
@@ -49,7 +49,7 @@
 		/// <summary>
 		/// Async task that refines the reconstruction
 		/// </summary>
-		std::string Refine();
+		int Refine();
 
 		/// <summary>
 		/// (current) number of vertices of reconstruction
@@ -60,6 +60,9 @@
 		/// number of images
 		/// </summary>
 		int getNImages();
+
+
+		void testPrj();
 
 		/// <summary>
 		/// Function that computes which vertices are visible from which cameras. 

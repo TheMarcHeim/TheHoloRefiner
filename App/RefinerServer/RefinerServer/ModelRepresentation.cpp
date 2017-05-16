@@ -1,5 +1,6 @@
 #include "ModelRepresentation.h"
 #include "stdafx.h"
+#include <iostream>
 
 
 ModelRepresentation::ModelRepresentation()
@@ -25,6 +26,10 @@ bool ModelRepresentation::loadFile(std::string path)
 	nVert = V.rows();
 	nVertexObservations = Eigen::VectorXi::Zero(nVert);
 	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
+
+	std::cout << "\n" << "Number of vertices: " << nVert << "\n";
+	std::cout << "\n" << "Number of triangles: " << nTriang << "\n";
+
 	return true;
 }
 

@@ -1,5 +1,6 @@
 ﻿#include "NativeRefiner.h"
 #include "stdafx.h"
+#include <iostream>
 
 NativeRefiner::NativeRefiner()
 {
@@ -24,9 +25,9 @@ void NativeRefiner::addInitModel(std::string path)
 	model.loadFile(path);
 }
 
-std::string NativeRefiner::Refine()
+int NativeRefiner::Refine()
 {
-	return std::to_string(computeVisibility());// model.adjustmentScores(7, 348).ToString(); // return random adjustment score
+	return computeVisibility();// model.adjustmentScores(7, 348).ToString(); // return random adjustment score
 }
 
 int NativeRefiner::getSize() {
@@ -37,18 +38,48 @@ int NativeRefiner::getNImages() {
 	return images.size();
 }
 
+void NativeRefiner::testPrj() {
+
+	Eigen::Vector3d worldPoint(-2.8, 0.0, -1.4);
+	int thisView = 1;
+
+	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
+	Eigen::Matrix<double, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera orientation matrix (camera to world)	
+	Eigen::Matrix<double, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();
+
+	Eigen::Vector3d vertInCam = R_wc.transpose()*(worldPoint - C_w);													// ... in camera frame
+	Eigen::Vector3d vertInImg = K*vertInCam;
+
+	Eigen::Vector2d rel(vertInImg(0) / vertInImg(2), vertInImg(1) / vertInImg(2));
+	Eigen::Vector2d pix((rel(0) + 1) / 2 * 2048 , (rel(1) + 1) / 2 * 1152);
+
+
+	std::cout << "relative img coords " << "\n" << rel << "\n";
+	std::cout << "pixel coords " << "\n" << pix << "\n";
+
+}
+
 int NativeRefiner::computeVisibility() {
 
 	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);		//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
 	int nVis = 0;
 	for (int v = 0; v < model.nVert; v++) {
 		for (int i = 0; i < nImages; i++) {
-			if (isVisible(v,i)) {
-				visibility(v,i) = 1;	//rows: vertices, columns: images
-				nVis++;
+			
+			if (i == 0) {
+				if (isVisible(v, i)) {
+					visibility(v, i) = 1;	//rows: vertices, columns: images
+					nVis++;
+				}
 			}
 		}
 	}
+
+	std::ofstream file("C:/Users/davidrohr/Documents/Unity Projects/TheHoloRefiner/App/RefinerServer/visibility.txt", std::ofstream::out);
+	file << visibility;
+	file.close();
+
+
 	return nVis;
 }
 
@@ -74,13 +105,14 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 
 		// check if vertex projects into image
 		if(vertInImg(0)>= -vertInImg(2) && vertInImg(0) <= vertInImg(2) && vertInImg(1) >= -vertInImg(2) && vertInImg(1) <= vertInImg(2)){
-	
 			// check if patch is reasonably facing the camera using surface normal
+			visible = true;
 			if (N_w.dot((C_w - P_w).normalized()) > threshold) {
-				visible = true;
+				
 			}
 		}
 	}
+	
 	return visible;
 }
 

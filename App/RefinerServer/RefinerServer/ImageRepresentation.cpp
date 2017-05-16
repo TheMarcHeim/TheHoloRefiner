@@ -1,6 +1,6 @@
 #include "ImageRepresentation.h"
 #include "stdafx.h"
-
+#include <iostream>
 
 ImageRepresentation::ImageRepresentation(std::string filename,
 	Eigen::Matrix4f pCameraViewTransform,
@@ -47,6 +47,11 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 							pCameraViewTransform(1,0), -pCameraViewTransform(1,1), -pCameraViewTransform(1,2), pCameraViewTransform(1,3),
 							pCameraViewTransform(3,0), pCameraViewTransform(3,1), pCameraViewTransform(3,2), pCameraViewTransform(3,3);
 
+	std::cout << "\n";
+	std::cout << "CVT" << "\n";
+	std::cout << CameraViewTransform;
+	std::cout << "\n";
+
 	/*
 	CameraProjectionTransform << pCameraProjectionTransform.m11, pCameraProjectionTransform.m12, -pCameraProjectionTransform.m13, pCameraProjectionTransform.m14,
 								 pCameraProjectionTransform.m21, pCameraProjectionTransform.m22, -pCameraProjectionTransform.m23, pCameraProjectionTransform.m24,
@@ -57,7 +62,7 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 	diag << 1, 1, -1, -1;
 	Eigen::Matrix4f diagM = diag.asDiagonal();
 	CameraProjectionTransform = pCameraProjectionTransform*diagM;
-
+	
 }
 
 //compute 3D projection of 2D point "pixel" onto surface defined by normal "surface_normal" and vertex "vertex"

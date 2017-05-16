@@ -54,39 +54,53 @@ void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
 
 
 
-
-
 int main()
 {
-
 
 	NativeRefiner refiner;
 	Eigen::Matrix4f intrinsic;
 	Eigen::Matrix4f extrinsic;
-	std::string path = "C:/Users/vnico/Documents/TheHoloRefiner/App/RefinerServer/x64/Debug/";
+	std::string path = "C:/Users/davidrohr/Documents/Unity Projects/TheHoloRefiner/App/RefinerServer/";
 
 	// loading model
 	refiner.addInitModel(path + "sofa.obj");
 
 	// adding picture 1
 	loadMats(extrinsic, intrinsic, path + "CapturedImage11.29642.png.matr");
+	int a = 1;
 	refiner.addPicture(path + "CapturedImage11.29642.png", extrinsic, intrinsic);
+	
+	/*std::cout << "\n";
+	std::cout << "Intrinsic 11: " << "\n" << intrinsic << "\n";
+	std::cout << "\n";
+	std::cout << "Extrinsic 11: " << "\n" << extrinsic << "\n";
+	std::cout << "\n";*/
 
 	// adding picture 2
 	loadMats(extrinsic, intrinsic, path + "CapturedImage20.98344.png.matr");
 	refiner.addPicture(path + "CapturedImage20.98344.png", extrinsic, intrinsic);
+	
+	/*std::cout << "\n";
+	std::cout << "Intrinsic 20: " << "\n" << intrinsic << "\n";
+	std::cout << "\n";
+	std::cout << "Extrinsic 20: " << "\n" << extrinsic << "\n";
+	std::cout << "\n";*/
+
 
 	// display loaded images
-	cv::namedWindow("Test", CV_WINDOW_AUTOSIZE);
-	cv::imshow("Test",refiner.images[1].ocvImage);
-	cv::waitKey(0);
+	//cv::namedWindow("Test", CV_WINDOW_AUTOSIZE);
+	//cv::imshow("Test",refiner.images[1].ocvImage);
+	//cv::waitKey(0);
 	
 	// sanity check
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 	std::cout << "Image width: " << (int)refiner.images[0].width << "\n";
 	std::cout << "Image height: " << (int)refiner.images[0].height<< "\n";
 
-	std::string nVis = refiner.Refine();
+	// verification via Matlab 
+	//	refiner.testPrj();
+
+	int nVis = refiner.Refine();
 
 	std::cout << nVis << "\n";
 
