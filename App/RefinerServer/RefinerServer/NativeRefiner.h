@@ -81,10 +81,11 @@
 		/// Function to compute adjustment scores for all pairs
 		/// </summary>
 		int computeAdjustmentScores();
+		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
 
 	private:
 		ModelRepresentation model;
-		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
+
 		cv::Size patch_size;
 		int nImages;
 		Eigen::MatrixXi visibility; //rows: vertices, columns: images

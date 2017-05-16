@@ -11,7 +11,7 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 	unsigned width, height;
 
 	unsigned error = lodepng::load_file(png, filename);
-	if (!error) error = lodepng::decode(image, width, height, png);
+	if (!error) error = lodepng::decode(image, width, height, png);	//needed?
 
 	//prepare openCV buffers
 	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
@@ -43,9 +43,9 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 
 	
 	CameraViewTransform << -pCameraViewTransform(2,0), pCameraViewTransform(2,1) , pCameraViewTransform(2,2), -pCameraViewTransform(2,3),
-		pCameraViewTransform(0,0), -pCameraViewTransform(0,1), -pCameraViewTransform(0,2), pCameraViewTransform(0,3),
-		pCameraViewTransform(1,0), -pCameraViewTransform(1,1), -pCameraViewTransform(1,2), pCameraViewTransform(1,3),
-		pCameraViewTransform(3,0), pCameraViewTransform(3,1), pCameraViewTransform(3,2), pCameraViewTransform(3,3);
+							pCameraViewTransform(0,0), -pCameraViewTransform(0,1), -pCameraViewTransform(0,2), pCameraViewTransform(0,3),
+							pCameraViewTransform(1,0), -pCameraViewTransform(1,1), -pCameraViewTransform(1,2), pCameraViewTransform(1,3),
+							pCameraViewTransform(3,0), pCameraViewTransform(3,1), pCameraViewTransform(3,2), pCameraViewTransform(3,3);
 
 	/*
 	CameraProjectionTransform << pCameraProjectionTransform.m11, pCameraProjectionTransform.m12, -pCameraProjectionTransform.m13, pCameraProjectionTransform.m14,
@@ -54,7 +54,7 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 								 pCameraProjectionTransform.m41, pCameraProjectionTransform.m42, -pCameraProjectionTransform.m43, pCameraProjectionTransform.m44;*/
 	
 	Eigen::Vector4f diag;
-	diag << 1, 1, -1, 1;
+	diag << 1, 1, -1, -1;
 	Eigen::Matrix4f diagM = diag.asDiagonal();
 	CameraProjectionTransform = pCameraProjectionTransform*diagM;
 

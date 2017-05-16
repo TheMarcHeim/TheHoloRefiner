@@ -1,6 +1,7 @@
 #include "ModelRepresentation.h"
 #include "stdafx.h"
 
+
 ModelRepresentation::ModelRepresentation()
 {
 	nStepsDepthSearch = 11;
