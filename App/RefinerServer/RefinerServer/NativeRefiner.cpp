@@ -3,7 +3,7 @@
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(7, 7); // to be experimented with - later implement in a parameter file preferably
+	patch_size = cv::Size(140, 140); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefiner::reset()
@@ -26,7 +26,10 @@ void NativeRefiner::addInitModel(std::string path)
 
 std::string NativeRefiner::Refine()
 {
-	return std::to_string(computeVisibility());// model.adjustmentScores(7, 348).ToString(); // return random adjustment score
+	computeVisibility();
+	computeAdjustmentScores();
+	return std::to_string(model.adjustmentScores(7, 348));// return random adjustment score
+	//return std::to_string(computeVisibility());//  
 }
 
 int NativeRefiner::getSize() {
@@ -108,6 +111,7 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 		temp = model.adjustmentScores(i, vertex); // to monitor in debugger while we don't have cout
 	} 
+	std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<11, 1>(0, vertex) << std::endl << std::endl;
 }
 
 // This function computes adjustment scores for all vertices and pairs
@@ -120,7 +124,6 @@ int NativeRefiner::computeAdjustmentScores() {
 	
 	// loop through all vertices and images, find pairs and compute 
 	// Note: only looks at pairs including first image
-	bingo = computeVisibility();
 	for (int v = 0; v < model.nVert; v++) {
 		visCount = 0;
 		for (int i = 0; i < nImages; i++) {
@@ -130,7 +133,7 @@ int NativeRefiner::computeAdjustmentScores() {
 					secondSight = i;
 					computeVertexAdjustmentScores(v, firstSight, secondSight);
 					bingo++; //just a dummy to stop calculation at some point
-					if (bingo >= 1000)
+					if (bingo >= 50)
 						return v;
 				}
 				else {
