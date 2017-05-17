@@ -59,7 +59,7 @@ int main()
 	Eigen::Matrix4f intrinsic;
 	Eigen::Matrix4f extrinsic;
 	//std::string path = "C:/Users/Nico/Documents/3DVision/TheHoloRefiner/App/RefinerTest/RefinerTest/bin/x86/Debug/AppX/"; //Nico PC
-	std::string path = "C:/Users/vnico/Documents/TheHoloRefiner/App/RefinerServer/x64/Debug/"; // Lab PC
+	std::string path = "C:/SofaData/"; // Lab PC
 
 	// loading model
 	refiner.addInitModel(path + "sofa.obj");
