@@ -48,9 +48,14 @@
 		void addInitModel(std::string path);
 
 		/// <summary>
+		/// add initial model in specified file format---> https://github.com/TheMarcHeim/TheHoloRefiner/wiki/Mesh-file-format
+		/// </summary>
+		void saveRefinedModel(std::string path);
+
+		/// <summary>
 		/// Async task that refines the reconstruction
 		/// </summary>
-		std::string Refine();
+		std::string refine();
 
 		/// <summary>
 		/// (current) number of vertices of reconstruction
@@ -82,11 +87,16 @@
 		/// Function to compute adjustment scores for all pairs
 		/// </summary>
 		int computeAdjustmentScores();
-		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
 
+		/// <summary>
+		/// Function to compute adjustment scores for all pairs
+		/// </summary>
+		void adjustVertices();
+
+
+		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
 	private:
 		ModelRepresentation model;
-
 		cv::Size patch_size;
 		int nImages;
 		Eigen::MatrixXi visibility; //rows: vertices, columns: images

@@ -5,6 +5,8 @@
 ModelRepresentation::ModelRepresentation()
 {
 	nStepsDepthSearch = 11;
+	stepSize = 0.01;
+
 }
 
 ModelRepresentation::~ModelRepresentation()
@@ -27,6 +29,13 @@ bool ModelRepresentation::loadFile(std::string path)
 	CorrectV << V.col(2), V.col(0), V.col(1);
 	nVertexObservations = Eigen::VectorXi::Zero(nVert);
 	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
+	return true;
+}
+
+bool ModelRepresentation::saveFile(std::string path)
+{
+	//we do it now with libigl
+	igl::writeOBJ(path.c_str(), V, F);
 	return true;
 }
 

@@ -145,14 +145,10 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 
 	// and normalize them to get the pixel coordinates which define the source frame for the perspective transform	
 	cv::Point2f p_c2[4];
-	p_c2[0] = cv::Point2f((hp1_c2(0) / hp1_c2(2) + 1) / 2 * x_size, (hp1_c2(1) / hp1_c2(2) + 1) / 2 * y_size);								// source frame for perspective transform, i.e. warped patch in image 2
+	p_c2[0] = cv::Point2f((hp1_c2(0) / hp1_c2(2) + 1) / 2 * x_size, (hp1_c2(1) / hp1_c2(2) + 1) / 2 * y_size);			// source frame for perspective transform, i.e. warped patch in image 2
 	p_c2[1] = cv::Point2f((hp2_c2(0) / hp2_c2(2) + 1) / 2 * x_size, (hp2_c2(1) / hp2_c2(2) + 1) / 2 * y_size);
 	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * x_size, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * y_size);
 	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * x_size, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * y_size);
-
-	
-
-	
 
 	// preparing target frame for perspective transform
 	cv::Point2f p_c1[4];
@@ -170,13 +166,8 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	M = cv::getPerspectiveTransform(p_c2, p_c1);
 
 	// and apply perspective transform to "undistort" patch in image 2 by mapping it onto target frame
-	// cv::warpPerspective(img_c2, output, M, patch_size);												// POTENTIAL ERROR: last argument should be of cv-type "size"
-	cv::warpPerspective(img_c2, patch2, M, patch2.size());												// POTENTIAL SOLUTION:
+	cv::warpPerspective(img_c2, patch2, M, patch2.size());
 
-	// TO DO: (because our approach changed after the discussion with Torsten...)
-	// So far, whoever calls this function has to calculate the patch in image 1 himself to correlate it with the one returned by this function - which is inefficient since we are doing the same at the beginning of this function as well...
-	// Suggestion: return (either explicit or by reference) both the patch of image 1 and the corresponding patch of image 2. We could also extend this function to also do the correlation 
-	// between the patches ...
 	cv::Rect patch(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);
 	cv::Mat correlation;
 	patch1 = cv::Mat(img_c1, patch);
@@ -205,9 +196,8 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::imshow("img1", img_c1);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(1);
+	cv::waitKey(0);
 	*/
 	
-
 	return correlation.at<float>(0,0);
 }

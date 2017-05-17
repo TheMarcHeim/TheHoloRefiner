@@ -84,7 +84,11 @@ int main()
 	// sanity check
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
-	std::string nVis = refiner.Refine();
+	// refine
+	std::string nVis = refiner.refine();
+
+	//  save refined
+	refiner.saveRefinedModel(path + "sofa_refined.obj");
 
 	std::cout << nVis << "\n";
 
