@@ -3,6 +3,7 @@
 #include <igl/Hit.h>
 #include <igl/ray_mesh_intersect.h>
 
+
 NativeRefiner::NativeRefiner()
 {
 	patch_size = cv::Size(50, 50); // to be experimented with - later implement in a parameter file preferably
@@ -43,7 +44,8 @@ int NativeRefiner::getNImages() {
 }
 
 int NativeRefiner::computeVisibility() {
-
+	//open viewer
+	
 	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);		//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
 	int nVis = 0;
 	for (int v = 0; v < model.nVert; v++) {
@@ -95,15 +97,30 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		Eigen::Vector3d dir = camToPos.normalized();
 		//expected distance
 		double expDist = camToPos.norm();
+		double expDist2 = sqrt(camToPos(0)*camToPos(0) + camToPos(1)*camToPos(1) + camToPos(2)*camToPos(2));
 		//first hit
 		igl::Hit hit;
-		igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.V, model.F, hit);
+		const double tolerance = 0.05;
 
-		const double tolerance = 0.95;
-			//check distance
-		if (hit.t < tolerance*expDist)
+
+
+		bool hasHit = igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.CorrectV, model.F, hit);
+		
+		
+		
+		//check distance
+		if (hasHit && hit.t < expDist - tolerance)
+		{
 			visible = false;
-
+			//check hits
+			/*
+			Eigen::Vector3d pos1 = C_w + dir*hit.t;
+			int VID = model.F(hit.id, 0);
+			int VID1 = model.F(hit.id, 1);
+			int VID2 = model.F(hit.id, 2);
+			Eigen::Vector3d pos2 = model.CorrectV.row(VID);
+			*/
+		}
 
 	}
 	return visible;

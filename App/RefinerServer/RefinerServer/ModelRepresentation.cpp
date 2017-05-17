@@ -23,6 +23,8 @@ bool ModelRepresentation::loadFile(std::string path)
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
+	CorrectV = Eigen::MatrixXd(V.rows(), V.cols());
+	CorrectV << V.col(2), V.col(0), V.col(1);
 	nVertexObservations = Eigen::VectorXi::Zero(nVert);
 	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
 	return true;

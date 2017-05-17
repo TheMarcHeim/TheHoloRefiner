@@ -4,10 +4,10 @@
 #include<string>
 #include<Eigen/Dense>
 #include<igl/cotmatrix.h>
-#include <igl/upsample.h>
-#include <igl/per_vertex_normals.h>
-#include <igl/per_face_normals.h>
-#include <igl/per_corner_normals.h>
+#include<igl/upsample.h>
+#include<igl/per_vertex_normals.h>
+#include<igl/per_face_normals.h>
+#include<igl/per_corner_normals.h>
 #include<igl/readOBJ.h>
 
 //use this for internal representation
@@ -37,6 +37,7 @@ class ModelRepresentation
 		int nVert;
 		int nStepsDepthSearch;
 		Eigen::MatrixXd V; //vertices
+		Eigen::MatrixXd CorrectV;
 		Eigen::MatrixXi F;
 		Eigen::MatrixXd VN; // vertex normals
 		Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores

@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <iostream>
+//#include <igl/viewer/Viewer.h> didn't work until now
 
 
 	class NativeRefiner
