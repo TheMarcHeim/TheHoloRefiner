@@ -58,18 +58,23 @@ int main()
 	NativeRefiner refiner;
 	Eigen::Matrix4f intrinsic;
 	Eigen::Matrix4f extrinsic;
-	std::string path = "C:/Users/Nico/Documents/3DVision/TheHoloRefiner/App/RefinerTest/RefinerTest/bin/x86/Debug/AppX/";
+	//std::string path = "C:/Users/Nico/Documents/3DVision/TheHoloRefiner/App/RefinerTest/RefinerTest/bin/x86/Debug/AppX/"; //Nico PC
+	std::string path = "C:/Users/vnico/Documents/TheHoloRefiner/App/RefinerServer/x64/Debug/"; // Lab PC
 
 	// loading model
 	refiner.addInitModel(path + "sofa.obj");
 
 	// adding picture 1
-	loadMats(extrinsic, intrinsic, path + "CapturedImage51.04058.png.matr");
-	refiner.addPicture(path + "CapturedImage51.04058.png", extrinsic, intrinsic);
+	//loadMats(extrinsic, intrinsic, path + "CapturedImage51.04058.png.matr"); //Nico
+	//refiner.addPicture(path + "CapturedImage51.04058.png", extrinsic, intrinsic);
+	loadMats(extrinsic, intrinsic, path + "CapturedImage11.29642.png.matr"); //lab
+	refiner.addPicture(path + "CapturedImage11.29642.png", extrinsic, intrinsic);
 
 	// adding picture 2
-	loadMats(extrinsic, intrinsic, path + "CapturedImage270.963.png.matr");
-	refiner.addPicture(path + "CapturedImage270.963.png", extrinsic, intrinsic);
+	//loadMats(extrinsic, intrinsic, path + "CapturedImage270.963.png.matr"); //Nico
+	//refiner.addPicture(path + "CapturedImage270.963.png", extrinsic, intrinsic);
+	loadMats(extrinsic, intrinsic, path + "CapturedImage20.98344.png.matr"); //lab
+	refiner.addPicture(path + "CapturedImage20.98344.png", extrinsic, intrinsic);
 
 	// display loaded images
 //	cv::namedWindow("Test", CV_WINDOW_AUTOSIZE);

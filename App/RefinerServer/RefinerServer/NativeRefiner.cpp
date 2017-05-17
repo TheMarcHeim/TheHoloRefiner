@@ -5,7 +5,7 @@
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(140, 140); // to be experimented with - later implement in a parameter file preferably
+	patch_size = cv::Size(50, 50); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefiner::reset()
@@ -30,7 +30,7 @@ std::string NativeRefiner::Refine()
 {
 	computeVisibility();
 	computeAdjustmentScores();
-	return std::to_string(model.adjustmentScores(7, 348));// return random adjustment score
+	return "done";// std::to_string(model.adjustmentScores(7, 348));// return random adjustment score
 	//return std::to_string(computeVisibility());//  
 }
 
@@ -115,9 +115,10 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	Eigen::Vector3d p(0, 0, 0);
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
-	double step_size = 0.05; // to be experimented with - later implement in a parameter file preferably
+	double step_size = 0.01; // to be experimented with - later implement in a parameter file preferably
 		
-	p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
+	p << model.V(vertex, 2)+0.02, model.V(vertex, 0)+0.22, model.V(vertex, 1)-0.05;  // Note permutation required to be consistent with new convention
+	//p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);
 	n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
 																  // it is very unlikely that they use different conventions in the same .obj file ...
 	
