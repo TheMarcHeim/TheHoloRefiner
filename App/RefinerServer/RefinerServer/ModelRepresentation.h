@@ -9,6 +9,7 @@
 #include <igl/per_face_normals.h>
 #include <igl/per_corner_normals.h>
 #include<igl/readOBJ.h>
+#include <igl/writeOBJ.h>
 
 //use this for internal representation
 
@@ -29,6 +30,12 @@ class ModelRepresentation
 		bool loadFile(std::string path);
 
 		/// <summary>
+		/// Save object file
+		/// </summary>
+		bool saveFile(std::string path);
+
+
+		/// <summary>
 		/// compute normals at vertices
 		/// </summary>
 		void computeNormals();
@@ -36,6 +43,7 @@ class ModelRepresentation
 		int nTriang;
 		int nVert;
 		int nStepsDepthSearch;
+		double stepSize;
 
 		Eigen::MatrixXd V; //vertices
 		Eigen::MatrixXi F;
