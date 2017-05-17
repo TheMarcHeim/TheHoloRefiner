@@ -96,9 +96,10 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	// K:		camera calibration matrix
 
 	// images of camera 1 and camera 2
-	cv::Mat img_c1 = ocvImage;
+	cv::Mat img_c1 = ocvImage ;
 	cv::Mat img_c2 = image2.ocvImage;
-	cv::Mat output = cv::Mat::zeros(patch_size,  img_c1.type());
+	cv::Mat patch1 = cv::Mat::zeros(patch_size,  img_c1.type());
+	cv::Mat patch2 = cv::Mat::zeros(patch_size, img_c1.type());
 
 	// get ex- & intrinsics of camera
 	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
@@ -128,12 +129,7 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::Point2d p3_c1(pix_u + patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper right corner
 	cv::Point2d p4_c1(pix_u - patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper left corner
 
-	// display image with patch																									// display image with patch
-	cv::namedWindow("img1", cv::WINDOW_NORMAL);
-	cv::rectangle(img_c1, cv::Rect(p4_c1, patch_size), cv::Scalar(250,255,255), 5, 8, 0);
-	cv::imshow("img1", img_c1);
-	//cv::waitKey(0);
-	std::cout << cv::Point(p4_c1.x, p4_c1.y) << " and " << cv::Point((int)p1_c1.x, (int)p1_c1.y) << std::endl;
+
 
 	// computing 3D projections of patch corners
 	Eigen::Vector3d P1_w = project2dto3d(surface_normal, vertex, p1_c1);									// Corner points of projected patch from image 1 in world frame
@@ -154,20 +150,9 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * x_size, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * y_size);
 	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * x_size, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * y_size);
 
-	// display image 2 with distorted patch																							// display image with patch
-	cv::namedWindow("img2", cv::WINDOW_NORMAL);
-	std::vector< cv::Point> contour;
-	contour.push_back(cv::Point((int)p_c2[0].x, (int)p_c2[0].y));
-	contour.push_back(cv::Point((int)p_c2[2].x, (int)p_c2[2].y));
-	contour.push_back(cv::Point((int)p_c2[3].x, (int)p_c2[3].y));
-	contour.push_back(cv::Point((int)p_c2[1].x, (int)p_c2[1].y));
+	
 
-	const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
-	int npts = cv::Mat(contour).rows;
-	polylines(img_c2, &pts, &npts, 1, true, cv::Scalar(255, 255, 255),5,8,0);
-	cv::imshow("img2", img_c2);
-	cv::waitKey(1);
-
+	
 
 	// preparing target frame for perspective transform
 	cv::Point2f p_c1[4];
@@ -183,10 +168,10 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	//cv::Mat M = cv::Mat::zeros(img_c1.rows, img_c1.cols, img_c1.type());								// transformation matrix
 	cv::Mat M = cv::Mat::zeros(3, 3, img_c1.type());
 	M = cv::getPerspectiveTransform(p_c2, p_c1);
-	std::cout << "M is \n " << M << std::endl;
+
 	// and apply perspective transform to "undistort" patch in image 2 by mapping it onto target frame
 	// cv::warpPerspective(img_c2, output, M, patch_size);												// POTENTIAL ERROR: last argument should be of cv-type "size"
-	cv::warpPerspective(img_c2, output, M, output.size());												// POTENTIAL SOLUTION:
+	cv::warpPerspective(img_c2, patch2, M, patch2.size());												// POTENTIAL SOLUTION:
 
 	// TO DO: (because our approach changed after the discussion with Torsten...)
 	// So far, whoever calls this function has to calculate the patch in image 1 himself to correlate it with the one returned by this function - which is inefficient since we are doing the same at the beginning of this function as well...
@@ -194,15 +179,35 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	// between the patches ...
 	cv::Rect patch(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);
 	cv::Mat correlation;
-	cv::Mat patch2 = cv::Mat(img_c1, patch);
-	cv::matchTemplate(patch2, output, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
+	patch1 = cv::Mat(img_c1, patch);
+	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
+
+	// display images and patches, print stuff
+	/*
+	std::cout << "M is \n " << M << std::endl;
 	std::cout << "Correlation is: " << correlation.at<float>(0, 0) << std::endl;
+	cv::namedWindow("img1", cv::WINDOW_NORMAL);
+	cv::namedWindow("img2", cv::WINDOW_NORMAL);
 	cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
 	cv::namedWindow("patch2", CV_WINDOW_AUTOSIZE);
-	//cv::resize(output, output, cv::Size(output.cols, output.rows));
+	cv::rectangle(img_c1, patch, cv::Scalar(250, 255, 255), 5, 8, 0);
+	std::vector< cv::Point> contour;
+	contour.push_back(cv::Point((int)p_c2[0].x, (int)p_c2[0].y));
+	contour.push_back(cv::Point((int)p_c2[2].x, (int)p_c2[2].y));
+	contour.push_back(cv::Point((int)p_c2[3].x, (int)p_c2[3].y));
+	contour.push_back(cv::Point((int)p_c2[1].x, (int)p_c2[1].y));
+	const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
+	int npts = cv::Mat(contour).rows;
+	polylines(img_c2, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
+	//cv::resize(patch1, patch1, cv::Size(output.cols, output.rows));
 	//cv::resize(patch2, patch2, cv::Size(patch2.cols, patch2.rows));
-	cv::imshow("patch1", patch2);
-	cv::imshow("patch2", output);
-	cv::waitKey(0);
+	cv::imshow("img2", img_c2);
+	cv::imshow("img1", img_c1);
+	cv::imshow("patch1", patch1);
+	cv::imshow("patch2", patch2);
+	cv::waitKey(1);
+	*/
+	
+
 	return correlation.at<float>(0,0);
 }
