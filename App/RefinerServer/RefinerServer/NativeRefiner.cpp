@@ -1,5 +1,7 @@
 ﻿#include "NativeRefiner.h"
 #include "stdafx.h"
+#include <igl/Hit.h>
+#include <igl/ray_mesh_intersect.h>
 
 NativeRefiner::NativeRefiner()
 {
@@ -83,6 +85,26 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 				visible = true;
 			}
 		}
+	}
+
+
+	if (visible) {
+		//check if occluded
+		//positional vector
+		Eigen::Vector3d camToPos = P_w - C_w;
+		Eigen::Vector3d dir = camToPos.normalized();
+		//expected distance
+		double expDist = camToPos.norm();
+		//first hit
+		igl::Hit hit;
+		igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.V, model.F, hit);
+
+		const double tolerance = 0.95;
+			//check distance
+		if (hit.t < tolerance*expDist)
+			visible = false;
+
+
 	}
 	return visible;
 }
