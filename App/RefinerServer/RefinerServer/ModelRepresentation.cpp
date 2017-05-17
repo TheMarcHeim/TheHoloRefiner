@@ -1,5 +1,13 @@
 #include "ModelRepresentation.h"
 #include "stdafx.h"
+#include<igl/cotmatrix.h>
+#include <igl/upsample.h>
+#include <igl/per_vertex_normals.h>
+#include <igl/per_face_normals.h>
+#include <igl/per_corner_normals.h>
+#include<igl/readOBJ.h>
+#include <igl/writeOBJ.h>
+#include<vector>
 
 
 ModelRepresentation::ModelRepresentation()

@@ -5,8 +5,6 @@
 #include <string>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
-#include <iostream>
-
 
 	class NativeRefiner
 	{
