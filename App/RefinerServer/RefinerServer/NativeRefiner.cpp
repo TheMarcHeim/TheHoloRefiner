@@ -5,7 +5,7 @@
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(50, 50); // to be experimented with - later implement in a parameter file preferably
+	patch_size = cv::Size(9, 9); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefiner::reset()
@@ -124,15 +124,12 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	
 	p_current = p - n*step_size*model.nStepsDepthSearch/2; // start at negative position along normal
 
-	float temp; // just for visualisation in debugger
-
 	model.nVertexObservations(vertex)++; // needed for averaging
 	for (int i = 0; i < model.nStepsDepthSearch; i++) {
 		p_current += step_size*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-1);
 		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
-		temp = model.adjustmentScores(i, vertex); // to monitor in debugger while we don't have cout
 	} 
 	std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<11, 1>(0, vertex) << std::endl << std::endl;
 }

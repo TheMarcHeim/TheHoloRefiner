@@ -205,7 +205,7 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::imshow("img1", img_c1);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(1);
+	cv::waitKey(0);
 	*/
 	
 

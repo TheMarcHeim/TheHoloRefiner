@@ -5,6 +5,7 @@
 ModelRepresentation::ModelRepresentation()
 {
 	nStepsDepthSearch = 11;
+
 }
 
 ModelRepresentation::~ModelRepresentation()

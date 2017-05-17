@@ -36,6 +36,7 @@ class ModelRepresentation
 		int nTriang;
 		int nVert;
 		int nStepsDepthSearch;
+
 		Eigen::MatrixXd V; //vertices
 		Eigen::MatrixXi F;
 		Eigen::MatrixXd VN; // vertex normals
