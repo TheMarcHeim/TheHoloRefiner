@@ -3,7 +3,6 @@
 #include <vector>
 
 
-
 ImageRepresentation::ImageRepresentation(std::string filename,
 	Eigen::Matrix4f pCameraViewTransform,
 	Eigen::Matrix4f pCameraProjectionTransform)

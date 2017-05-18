@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include <igl/Hit.h>
 #include <igl/ray_mesh_intersect.h>
-#include <iostream>
 
 
 NativeRefiner::NativeRefiner()
