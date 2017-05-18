@@ -12,6 +12,7 @@
 #include <opencv2/imgproc.hpp>
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv/cv.h"
+#include <Windows.h>
 
 
 void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
@@ -54,43 +55,44 @@ void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
 
 int main()
 {
-
 	NativeRefiner refiner;
 	Eigen::Matrix4f intrinsic;
 	Eigen::Matrix4f extrinsic;
-	//std::string path = "C:/Users/Nico/Documents/3DVision/TheHoloRefiner/App/RefinerTest/RefinerTest/bin/x86/Debug/AppX/"; //Nico PC
-	std::string path = "C:/SofaData/"; // Lab PC
+	std::string path = "C:/SofaData/"; // path to dataset
+	std::string temp;
+	std::string path_with_prefix = path + "*.png";
 
 	// loading model
 	refiner.addInitModel(path + "sofa.obj");
 
-	// adding picture 1
-	loadMats(extrinsic, intrinsic, path + "CapturedImage11.29642.png.matr"); //lab
-	refiner.addPicture(path + "CapturedImage11.29642.png", extrinsic, intrinsic);
-
-	// adding picture 2
-	loadMats(extrinsic, intrinsic, path + "CapturedImage20.98344.png.matr"); //lab
-	refiner.addPicture(path + "CapturedImage20.98344.png", extrinsic, intrinsic);
-
-	// adding picture 3
-	loadMats(extrinsic, intrinsic, path + "CapturedImage30.988.png.matr"); //lab
-	refiner.addPicture(path + "CapturedImage30.988.png", extrinsic, intrinsic);
-
-	// adding picture 3
-	loadMats(extrinsic, intrinsic, path + "CapturedImage61.05911.png.matr"); //lab
-	refiner.addPicture(path + "CapturedImage61.05911.png", extrinsic, intrinsic);
-	
-	// sanity check
+	// load all pictures and matrices	
+		std::wstring search_path = std::wstring(path_with_prefix.begin(), path_with_prefix.end());
+		WIN32_FIND_DATA fd;
+		HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+		if (hFind != INVALID_HANDLE_VALUE) {
+			do {
+				if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+					std::wstring ws = std::wstring(fd.cFileName);
+					temp = std::string(ws.begin(), ws.end());
+					loadMats(extrinsic, intrinsic, temp + ".matr");
+					refiner.addPicture(temp, extrinsic, intrinsic);
+					std::cout << "loaded picture and matr for " << temp << " \n";
+				}
+			} while (::FindNextFile(hFind, &fd));
+			::FindClose(hFind);
+		}
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
 	std::string out = refiner.refine();
+	std::cout << "Finished Refinement \n";
 
 	//  save refined
 	refiner.saveRefinedModel(path + "sofa_refined.obj");
+	std::cout << "Saved refined model\n";
 
-	std::cout << out << "\n";
-
+	// Done. Now loop forever to keep terminal from closing
+	std::cout << "done\n";
 	while (1) { 
 
 	}
