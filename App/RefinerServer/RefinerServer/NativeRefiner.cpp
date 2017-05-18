@@ -94,6 +94,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		}
 	}
 
+
 	if (visible) {
 		//check if occluded
 		//positional vector
