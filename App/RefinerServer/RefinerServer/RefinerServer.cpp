@@ -65,32 +65,31 @@ int main()
 	refiner.addInitModel(path + "sofa.obj");
 
 	// adding picture 1
-	//loadMats(extrinsic, intrinsic, path + "CapturedImage51.04058.png.matr"); //Nico
-	//refiner.addPicture(path + "CapturedImage51.04058.png", extrinsic, intrinsic);
 	loadMats(extrinsic, intrinsic, path + "CapturedImage11.29642.png.matr"); //lab
 	refiner.addPicture(path + "CapturedImage11.29642.png", extrinsic, intrinsic);
 
 	// adding picture 2
-	//loadMats(extrinsic, intrinsic, path + "CapturedImage270.963.png.matr"); //Nico
-	//refiner.addPicture(path + "CapturedImage270.963.png", extrinsic, intrinsic);
 	loadMats(extrinsic, intrinsic, path + "CapturedImage20.98344.png.matr"); //lab
 	refiner.addPicture(path + "CapturedImage20.98344.png", extrinsic, intrinsic);
 
-	// display loaded images
-//	cv::namedWindow("Test", CV_WINDOW_AUTOSIZE);
-//	cv::imshow("Test",refiner.images[1].ocvImage);
-//	cv::waitKey(0);
+	// adding picture 3
+	loadMats(extrinsic, intrinsic, path + "CapturedImage30.988.png.matr"); //lab
+	refiner.addPicture(path + "CapturedImage30.988.png", extrinsic, intrinsic);
+
+	// adding picture 3
+	loadMats(extrinsic, intrinsic, path + "CapturedImage61.05911.png.matr"); //lab
+	refiner.addPicture(path + "CapturedImage61.05911.png", extrinsic, intrinsic);
 	
 	// sanity check
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
-	std::string nVis = refiner.refine();
+	std::string out = refiner.refine();
 
 	//  save refined
 	refiner.saveRefinedModel(path + "sofa_refined.obj");
 
-	std::cout << nVis << "\n";
+	std::cout << out << "\n";
 
 	while (1) { 
 

@@ -38,8 +38,6 @@ std::string NativeRefiner::refine()
 	computeAdjustmentScores();
 	adjustVertices();
 	return "done";
-	// return std::to_string(model.adjustmentScores(7, 348));// return some adjustment score
-	// return std::to_string(computeVisibility());//  
 }
 
 int NativeRefiner::getSize() {
@@ -96,8 +94,6 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		}
 	}
 
-
-	
 	if (visible) {
 		//check if occluded
 		//positional vector
@@ -105,15 +101,11 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		Eigen::Vector3d dir = camToPos.normalized();
 		//expected distance
 		double expDist = camToPos.norm();
-		double expDist2 = sqrt(camToPos(0)*camToPos(0) + camToPos(1)*camToPos(1) + camToPos(2)*camToPos(2));
+		//double expDist2 = sqrt(camToPos(0)*camToPos(0) + camToPos(1)*camToPos(1) + camToPos(2)*camToPos(2));
 		//first hit
 		igl::Hit hit;
 		const double tolerance = 0.05;
-
-
 		bool hasHit = igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.CorrectV, model.F, hit);
-		
-		
 		
 		//check distance
 		if (hasHit && hit.t < expDist - tolerance)
@@ -129,6 +121,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 			*/
 		}
 	}
+
 	return visible;
 }
 
@@ -154,33 +147,19 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 	} 
-	//std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<11, 1>(0, vertex) << std::endl << std::endl;
+	//std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
 }
 
 // This function computes adjustment scores for all vertices and pairs
 int NativeRefiner::computeAdjustmentScores() {
-
-	int bingo = 0; // dummy variable used for debugging
-	int visCount = 0;
-	int firstSight = 0;
-	int secondSight = 0;
-	
 	// loop through all vertices and images, find pairs and compute 
-	// Note: only looks at pairs including first image
 	for (int v = 0; v < model.nVert; v++) {
-		visCount = 0;
-		for (int i = 0; i < nImages; i++) {
-			if (visibility(v, i) == 1) {
-				visCount++;
-				if (visCount >= 2) { // compute adjustment scores for "every" pair
-					secondSight = i;
-					computeVertexAdjustmentScores(v, firstSight, secondSight);
-					bingo++; //just a dummy to stop calculation at some point
-					//if (bingo >= 50)
-					//	return v;
-				}
-				else {
-					firstSight = i;
+		for (int firstSight = 0; firstSight < nImages; firstSight++) {
+			if (visibility(v, firstSight) == 1 && firstSight<nImages-1) {
+				for (int secondSight = firstSight + 1; secondSight < nImages; secondSight++) {
+					if (visibility(v, secondSight) == 1) {
+						computeVertexAdjustmentScores(v, firstSight, secondSight);
+					}
 				}
 			}
 		}
@@ -199,6 +178,6 @@ void NativeRefiner::adjustVertices() {
 			}
 		}
 		// adjust vertex
-		model.V.block<3, 1>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2 + 1)*model.VN.block<3, 1>(v, 0);
+		model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2 + 1)*model.VN.block<1, 3>(v, 0);
 	}
 }

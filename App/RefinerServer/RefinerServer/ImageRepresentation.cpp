@@ -129,8 +129,6 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::Point2d p3_c1(pix_u + patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper right corner
 	cv::Point2d p4_c1(pix_u - patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper left corner
 
-
-
 	// computing 3D projections of patch corners
 	Eigen::Vector3d P1_w = project2dto3d(surface_normal, vertex, p1_c1);									// Corner points of projected patch from image 1 in world frame
 	Eigen::Vector3d P2_w = project2dto3d(surface_normal, vertex, p2_c1);

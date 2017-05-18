@@ -4,9 +4,8 @@
 
 ModelRepresentation::ModelRepresentation()
 {
-	nStepsDepthSearch = 11;
-	stepSize = 0.01;
-
+	nStepsDepthSearch = 21;
+	stepSize = 0.005;
 }
 
 ModelRepresentation::~ModelRepresentation()
@@ -16,6 +15,13 @@ ModelRepresentation::~ModelRepresentation()
 void ModelRepresentation::subDivide()
 {
 	igl::upsample(V, F, 1);
+	computeNormals();
+	nTriang = F.rows();
+	nVert = V.rows();
+	CorrectV = Eigen::MatrixXd(V.rows(), V.cols());
+	CorrectV << V.col(2), V.col(0), V.col(1);
+	nVertexObservations = Eigen::VectorXi::Zero(nVert);
+	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
 }
 
 bool ModelRepresentation::loadFile(std::string path)
