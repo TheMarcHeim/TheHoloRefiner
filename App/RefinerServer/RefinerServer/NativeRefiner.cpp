@@ -95,8 +95,6 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 			}
 		}
 	}
-
-
 	
 	if (visible) {
 		//check if occluded
@@ -199,6 +197,6 @@ void NativeRefiner::adjustVertices() {
 			}
 		}
 		// adjust vertex
-		model.V.block<3, 1>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2 + 1)*model.VN.block<3, 1>(v, 0);
+		model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2 + 1)*model.VN.block<1, 3>(v, 0);
 	}
 }
