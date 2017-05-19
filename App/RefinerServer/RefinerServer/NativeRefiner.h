@@ -55,7 +55,7 @@
 		/// <summary>
 		/// Async task that refines the reconstruction
 		/// </summary>
-		std::string refine();
+		std::string refine(int nReps);
 
 		/// <summary>
 		/// (current) number of vertices of reconstruction
@@ -91,7 +91,7 @@
 		/// <summary>
 		/// Function to compute adjustment scores for all pairs
 		/// </summary>
-		void adjustVertices();
+		int adjustVertices();
 
 
 		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;

@@ -44,6 +44,7 @@ class ModelRepresentation
 		int nVert;
 		int nStepsDepthSearch;
 		double stepSize;
+		double refineTolerance;
 
 		Eigen::MatrixXd V; //vertices
 		Eigen::MatrixXd CorrectV;
@@ -51,4 +52,5 @@ class ModelRepresentation
 		Eigen::MatrixXd VN; // vertex normals
 		Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores
 		Eigen::VectorXi nVertexObservations; // counter needed to normalize adjustmentScores
+		Eigen::Matrix4f modelToWorldTransform; 
 	};

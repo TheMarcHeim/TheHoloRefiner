@@ -74,8 +74,8 @@ int main()
 				if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 					std::wstring ws = std::wstring(fd.cFileName);
 					temp = std::string(ws.begin(), ws.end());
-					loadMats(extrinsic, intrinsic, temp + ".matr");
-					refiner.addPicture(temp, extrinsic, intrinsic);
+					loadMats(extrinsic, intrinsic, path+ temp + ".matr");
+					refiner.addPicture(path + temp, extrinsic, intrinsic);
 					std::cout << "loaded picture and matr for " << temp << " \n";
 				}
 			} while (::FindNextFile(hFind, &fd));
@@ -83,8 +83,9 @@ int main()
 		}
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
+
 	// refine
-	std::string out = refiner.refine();
+	std::string out = refiner.refine(1);
 	std::cout << "Finished Refinement \n";
 
 	//  save refined

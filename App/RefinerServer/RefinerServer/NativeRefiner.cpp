@@ -32,11 +32,18 @@ void NativeRefiner::saveRefinedModel(std::string path)
 	model.saveFile(path);
 }
 
-std::string NativeRefiner::refine()
+std::string NativeRefiner::refine(int nReps)
 {
-	computeVisibility();
-	computeAdjustmentScores();
-	adjustVertices();
+	std::cout << "Number of vertices: " << model.nVert << std::endl;
+	int nAdj;
+	for(int i=0; i<nReps; i++){
+		std::cout << "Computing Visibility..." << std::endl;
+		computeVisibility();
+		std::cout << "Computing Adjustment Scores..." << std::endl;
+		computeAdjustmentScores();
+		nAdj = adjustVertices();
+		std::cout << "Percentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
+	}
 	return "done";
 }
 
@@ -61,6 +68,7 @@ int NativeRefiner::computeVisibility() {
 			}
 		}
 	}
+	std::cout << "finished computing visibility. number of visible vertices: " << nVis << std::endl;
 	return nVis;
 }
 
@@ -94,7 +102,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		}
 	}
 
-
+	
 	if (visible) {
 		//check if occluded
 		//positional vector
@@ -122,7 +130,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 			*/
 		}
 	}
-
+	
 	return visible;
 }
 
@@ -133,12 +141,10 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
 
-		
 	p << model.V(vertex, 2)+0.02, model.V(vertex, 0)+0.22, model.V(vertex, 1)-0.05;  // Note permutation required to be consistent with new convention
 	//p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);
 	n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
 																  // it is very unlikely that they use different conventions in the same .obj file ...
-	
 	p_current = p - n*model.stepSize*model.nStepsDepthSearch/2; // start at negative position along normal
 
 	model.nVertexObservations(vertex)++; // needed for averaging
@@ -165,20 +171,26 @@ int NativeRefiner::computeAdjustmentScores() {
 			}
 		}
 	}
+	std::cout << "finished computing adjustmentScores." << std::endl;
 	return 0;
 }
 
-void NativeRefiner::adjustVertices() {
+int NativeRefiner::adjustVertices() {
+	int nAdj = 0;
 	for (int v = 0; v < model.nVert; v++) { //loop through all vertices
-		float bestScore = 0;
-		float bestVertex = model.nStepsDepthSearch/2 + 1; // default to original vertex
+		int bestVertex = model.nStepsDepthSearch / 2;
+		float bestScore = model.adjustmentScores(bestVertex, v); //initial score
 		for (int i = 0; i < model.nStepsDepthSearch; i++) {
-			if (model.adjustmentScores(i, v) > bestScore) {
+			if (model.adjustmentScores(i, v) > bestScore ) {//+ model.refineTolerance*pow(i - model.nStepsDepthSearch / 2, 2)
 				bestScore = model.adjustmentScores(i, v);
 				bestVertex = i;
 			}
 		}
-		// adjust vertex
-		model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2 + 1)*model.VN.block<1, 3>(v, 0);
+		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 2)) {
+			model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
+			nAdj++;
+			std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
+		}
 	}
+	return nAdj;
 }
