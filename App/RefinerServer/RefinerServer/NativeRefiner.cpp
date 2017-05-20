@@ -38,6 +38,7 @@ std::string NativeRefiner::refine(int nReps)
 {
 	std::cout << "Number of vertices: " << model.nVert << std::endl;
 	int nAdj;
+
 	for(int i=0; i<nReps; i++){
 		std::cout << "Computing Visibility..." << std::endl;
 		computeVisibility();
@@ -177,10 +178,11 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	p_current = p - n*model.stepSize*model.nStepsDepthSearch/2; // start at negative position along normal
 
 	model.nVertexObservations(vertex)++; // needed for averaging
+	
 	for (int i = 0; i < model.nStepsDepthSearch; i++) {
 		p_current += model.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-1);
-		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
+		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size,0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 	} 
 	//std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
