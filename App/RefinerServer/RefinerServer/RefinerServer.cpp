@@ -12,6 +12,7 @@
 #include <opencv2/imgproc.hpp>
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv/cv.h"
+#include <Windows.h>
 
 
 void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
@@ -52,58 +53,48 @@ void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
 }
 	
 
-
-
 int main()
 {
-
 	NativeRefiner refiner;
 	Eigen::Matrix4f intrinsic;
 	Eigen::Matrix4f extrinsic;
-	std::string path = "C:/Users/davidrohr/Documents/Unity Projects/TheHoloRefiner/App/RefinerServer/";
+	std::string path = "C:/SofaData/"; // path to dataset
+	std::string temp;
+	std::string path_with_prefix = path + "*.png";
 
 	// loading model
 	refiner.addInitModel(path + "sofa.obj");
 
-	// adding picture 1
-	loadMats(extrinsic, intrinsic, path + "CapturedImage11.29642.png.matr");
-	int a = 1;
-	refiner.addPicture(path + "CapturedImage11.29642.png", extrinsic, intrinsic);
-	
-	/*std::cout << "\n";
-	std::cout << "Intrinsic 11: " << "\n" << intrinsic << "\n";
-	std::cout << "\n";
-	std::cout << "Extrinsic 11: " << "\n" << extrinsic << "\n";
-	std::cout << "\n";*/
+	// load all pictures and matrices	
+		std::wstring search_path = std::wstring(path_with_prefix.begin(), path_with_prefix.end());
+		WIN32_FIND_DATA fd;
+		HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+		if (hFind != INVALID_HANDLE_VALUE) {
+			do {
+				if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+					std::wstring ws = std::wstring(fd.cFileName);
+					temp = std::string(ws.begin(), ws.end());
+					loadMats(extrinsic, intrinsic, path+ temp + ".matr");
+					refiner.addPicture(path + temp, extrinsic, intrinsic);
+					std::cout << "loaded picture and matr for " << temp << " \n";
+				}
+			} while (::FindNextFile(hFind, &fd));
+			::FindClose(hFind);
+		}
 
-	// adding picture 2
-	loadMats(extrinsic, intrinsic, path + "CapturedImage20.98344.png.matr");
-	refiner.addPicture(path + "CapturedImage20.98344.png", extrinsic, intrinsic);
 	
-	/*std::cout << "\n";
-	std::cout << "Intrinsic 20: " << "\n" << intrinsic << "\n";
-	std::cout << "\n";
-	std::cout << "Extrinsic 20: " << "\n" << extrinsic << "\n";
-	std::cout << "\n";*/
-
-
-	// display loaded images
-	//cv::namedWindow("Test", CV_WINDOW_AUTOSIZE);
-	//cv::imshow("Test",refiner.images[1].ocvImage);
-	//cv::waitKey(0);
-	
-	// sanity check
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
-	std::cout << "Image width: " << (int)refiner.images[0].width << "\n";
-	std::cout << "Image height: " << (int)refiner.images[0].height<< "\n";
 
-	// verification via Matlab 
-	//	refiner.testPrj();
+	// refine
+	std::string out = refiner.refine(1);
+	std::cout << "Finished Refinement \n";
 
-	int nVis = refiner.Refine();
+	//  save refined
+	refiner.saveRefinedModel(path + "sofa_refined.obj");
+	std::cout << "Saved refined model\n";
 
-	std::cout << nVis << "\n";
-
+	// Done. Now loop forever to keep terminal from closing
+	std::cout << "done\n";
 	while (1) { 
 
 	}

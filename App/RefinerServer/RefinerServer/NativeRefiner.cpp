@@ -1,10 +1,13 @@
 ﻿#include "NativeRefiner.h"
 #include "stdafx.h"
 #include <iostream>
+#include <igl/Hit.h>
+#include <igl/ray_mesh_intersect.h>
+
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(7, 7); // to be experimented with - later implement in a parameter file preferably
+	patch_size = cv::Size(9, 9); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefiner::reset()
@@ -25,9 +28,26 @@ void NativeRefiner::addInitModel(std::string path)
 	model.loadFile(path);
 }
 
-int NativeRefiner::Refine()
+
+void NativeRefiner::saveRefinedModel(std::string path)
 {
-	return computeVisibility();// model.adjustmentScores(7, 348).ToString(); // return random adjustment score
+	model.saveFile(path);
+}
+
+std::string NativeRefiner::refine(int nReps)
+{
+	std::cout << "Number of vertices: " << model.nVert << std::endl;
+	int nAdj;
+	for(int i=0; i<nReps; i++){
+		std::cout << "Computing Visibility..." << std::endl;
+		computeVisibility();
+		std::cout << "Computing Adjustment Scores..." << std::endl;
+		computeAdjustmentScores();
+		nAdj = adjustVertices();
+		std::cout << "Percentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
+	}
+	return "done";
+
 }
 
 int NativeRefiner::getSize() {
@@ -60,7 +80,8 @@ void NativeRefiner::testPrj() {
 }
 
 int NativeRefiner::computeVisibility() {
-
+	//open viewer
+	
 	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);		//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
 	int nVis = 0;
 	for (int v = 0; v < model.nVert; v++) {
@@ -75,10 +96,7 @@ int NativeRefiner::computeVisibility() {
 		}
 	}
 
-	std::ofstream file("C:/Users/davidrohr/Documents/Unity Projects/TheHoloRefiner/App/RefinerServer/visibility.txt", std::ofstream::out);
-	file << visibility;
-	file.close();
-
+	std::cout << "finished computing visibility. number of visible vertices: " << nVis << std::endl;
 
 	return nVis;
 }
@@ -112,6 +130,35 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 			}
 		}
 	}
+
+	
+	if (visible) {
+		//check if occluded
+		//positional vector
+		Eigen::Vector3d camToPos = P_w - C_w;
+		Eigen::Vector3d dir = camToPos.normalized();
+		//expected distance
+		double expDist = camToPos.norm();
+		//double expDist2 = sqrt(camToPos(0)*camToPos(0) + camToPos(1)*camToPos(1) + camToPos(2)*camToPos(2));
+		//first hit
+		igl::Hit hit;
+		const double tolerance = 0.05;
+		bool hasHit = igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.CorrectV, model.F, hit);
+		
+		//check distance
+		if (hasHit && hit.t < expDist - tolerance)
+		{
+			visible = false;
+			//check hits
+			/*
+			Eigen::Vector3d pos1 = C_w + dir*hit.t;
+			int VID = model.F(hit.id, 0);
+			int VID1 = model.F(hit.id, 1);
+			int VID2 = model.F(hit.id, 2);
+			Eigen::Vector3d pos2 = model.CorrectV.row(VID);
+			*/
+		}
+	}
 	
 	return visible;
 }
@@ -122,55 +169,57 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	Eigen::Vector3d p(0, 0, 0);
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
-	double step_size = 0.05; // to be experimented with - later implement in a parameter file preferably
-		
-	p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);  // Note permutation required to be consistent with new convention
+
+	p << model.V(vertex, 2)+0.02, model.V(vertex, 0)+0.22, model.V(vertex, 1)-0.05;  // Note permutation required to be consistent with new convention
+	//p << model.V(vertex, 2), model.V(vertex, 0), model.V(vertex, 1);
 	n << model.VN(vertex,2), model.VN(vertex,0), model.VN(vertex,1);  // Haven't yet checked whether these coordinates need to be permuted as well - but 
 																  // it is very unlikely that they use different conventions in the same .obj file ...
-	
-	p_current = p - n*step_size*model.nStepsDepthSearch/2; // start at negative position along normal
-
-	float temp; // just for visualisation in debugger
+	p_current = p - n*model.stepSize*model.nStepsDepthSearch/2; // start at negative position along normal
 
 	model.nVertexObservations(vertex)++; // needed for averaging
 	for (int i = 0; i < model.nStepsDepthSearch; i++) {
-		p_current += step_size*n;
+		p_current += model.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-1);
 		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
-		temp = model.adjustmentScores(i, vertex); // to monitor in debugger while we don't have cout
 	} 
+	//std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
 }
 
 // This function computes adjustment scores for all vertices and pairs
 int NativeRefiner::computeAdjustmentScores() {
-
-	int bingo = 0; // dummy variable used for debugging
-	int visCount = 0;
-	int firstSight = 0;
-	int secondSight = 0;
-	
 	// loop through all vertices and images, find pairs and compute 
-	// Note: only looks at pairs including first image
-	bingo = computeVisibility();
 	for (int v = 0; v < model.nVert; v++) {
-		visCount = 0;
-		for (int i = 0; i < nImages; i++) {
-			if (visibility(v, i) == 1) {
-				visCount++;
-				if (visCount >= 2) { // compute adjustment scores for "every" pair
-					secondSight = i;
-					computeVertexAdjustmentScores(v, firstSight, secondSight);
-					bingo++; //just a dummy to stop calculation at some point
-					if (bingo >= 1000)
-						return v;
-				}
-				else {
-					firstSight = i;
+		for (int firstSight = 0; firstSight < nImages; firstSight++) {
+			if (visibility(v, firstSight) == 1 && firstSight<nImages-1) {
+				for (int secondSight = firstSight + 1; secondSight < nImages; secondSight++) {
+					if (visibility(v, secondSight) == 1) {
+						computeVertexAdjustmentScores(v, firstSight, secondSight);
+					}
 				}
 			}
 		}
 	}
+	std::cout << "finished computing adjustmentScores." << std::endl;
 	return 0;
 }
 
+int NativeRefiner::adjustVertices() {
+	int nAdj = 0;
+	for (int v = 0; v < model.nVert; v++) { //loop through all vertices
+		int bestVertex = model.nStepsDepthSearch / 2;
+		float bestScore = model.adjustmentScores(bestVertex, v); //initial score
+		for (int i = 0; i < model.nStepsDepthSearch; i++) {
+			if (model.adjustmentScores(i, v) > bestScore ) {//+ model.refineTolerance*pow(i - model.nStepsDepthSearch / 2, 2)
+				bestScore = model.adjustmentScores(i, v);
+				bestVertex = i;
+			}
+		}
+		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 2)) {
+			model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
+			nAdj++;
+			std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
+		}
+	}
+	return nAdj;
+}

@@ -17,6 +17,8 @@
 #include <Eigen/Geometry>
 #include <iostream>
 
+const double M_PI = 3.14159265359;
+
 IGL_INLINE void igl::viewer::ViewerCore::align_camera_center(
   const Eigen::MatrixXd& V,
   const Eigen::MatrixXi& F)
