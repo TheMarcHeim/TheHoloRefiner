@@ -100,9 +100,10 @@ int main()
 
 	// Done. Now loop forever to keep terminal from closing
 	std::cout << "done\n";
-	while (1) { 
 
-	}
+	do {
+		std::cout << '\n' << "Press a key to quit...";
+	} while (std::cin.get() != '\n');
 
     return 0;
 }
