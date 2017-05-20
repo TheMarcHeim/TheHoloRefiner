@@ -93,7 +93,7 @@ Eigen::Vector3d ImageRepresentation::project2dto3d(Eigen::Vector3d surface_norma
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
-void ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, float corrGBRG[]) {
+float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, int colorFlag) {
 
 	// Nomencalture: 
 	// hpoint:	homogenous 2D image plane point (->3D)
@@ -182,28 +182,24 @@ void ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& 
 	cv::Rect patch(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);		
 	patch1 = cv::Mat(img_c1, patch);											// extracting patch 1 from img_c1	
 
-	//Grayscale
-	//cv::Mat correlation;		
-	//cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);		
-	//return correlation.at<float>(0,0);
 	
-	//Grayscale+BRG
-	cv::Mat correlation[4];		
+	if (colorFlag == 0) {			//Grayscale
+		cv::Mat correlation;
+		cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
+		return correlation.at<float>(0, 0);
+	}
+	else {							//BRG
+		cv::Mat correlation[3];
 
-	cv::split(patch1, patch1BRG);	
-	cv::split(patch2, patch2BRG);
+		cv::split(patch1, patch1BRG);
+		cv::split(patch2, patch2BRG);
 
-	cv::matchTemplate(patch1, patch2, correlation[0], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Grayscale
-	cv::matchTemplate(patch1BRG[0], patch2BRG[0], correlation[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Blue channel
-	cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlation[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
-	cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlation[3], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
+		cv::matchTemplate(patch1BRG[0], patch2BRG[0], correlation[0], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Blue channel
+		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlation[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
+		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlation[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
 
-	corrGBRG[0] = correlation[0].at<float>(0, 0);
-	corrGBRG[1] = correlation[1].at<float>(0, 0);
-	corrGBRG[2] = correlation[2].at<float>(0, 0);
-	corrGBRG[3] = correlation[3].at<float>(0, 0);
-	
-
+		return (correlation[0].at<float>(0, 0) + correlation[1].at<float>(0, 0) + correlation[2].at<float>(0, 0)) / 3.0;
+	}
 	// display images and patches, print stuff
 	/*
 	std::cout << "M is \n " << M << std::endl;

@@ -63,6 +63,8 @@ int main()
 	std::string path = "C:/SofaData/"; // path to dataset
 	std::string temp;
 	std::string path_with_prefix = path + "*.png";
+	int index = 0;
+	int maxNImg = 5;
 
 	// loading model
 	refiner.addInitModel(path + "sofa.obj");
@@ -79,8 +81,9 @@ int main()
 					loadMats(extrinsic, intrinsic, path+ temp + ".matr");
 					refiner.addPicture(path + temp, extrinsic, intrinsic);
 					std::cout << "loaded picture and matr for " << temp << " \n";
+					index++;
 				}
-			} while (::FindNextFile(hFind, &fd));
+			} while (::FindNextFile(hFind, &fd) && index<maxNImg);
 			::FindClose(hFind);
 		}
 
@@ -88,12 +91,12 @@ int main()
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
-	//std::string out = refiner.refine(1);
-	//std::cout << "Finished Refinement \n";
+	std::string out = refiner.refine(1);
+	std::cout << "Finished Refinement \n";
 
-	//  save refined
-	//refiner.saveRefinedModel(path + "sofa_refined.obj");
-	//std::cout << "Saved refined model\n";
+	// save refined
+	refiner.saveRefinedModel(path + "sofa_refined.obj");
+	std::cout << "Saved refined model\n";
 
 	// Done. Now loop forever to keep terminal from closing
 	std::cout << "done\n";
