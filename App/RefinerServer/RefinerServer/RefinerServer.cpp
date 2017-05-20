@@ -16,12 +16,14 @@
 
 
 void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
+
 	std::fstream file(path);
 	std::string line;
 	std::string line2;
 	std::string line3;
 	size_t pos = 0;
 	std::string::size_type sz;     // alias of size_t
+	
 	int thisMat = 0;
 	int i = 0;
 	while (getline(file, line)) {
@@ -86,12 +88,12 @@ int main()
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
-	std::string out = refiner.refine(1);
-	std::cout << "Finished Refinement \n";
+	//std::string out = refiner.refine(1);
+	//std::cout << "Finished Refinement \n";
 
 	//  save refined
-	refiner.saveRefinedModel(path + "sofa_refined.obj");
-	std::cout << "Saved refined model\n";
+	//refiner.saveRefinedModel(path + "sofa_refined.obj");
+	//std::cout << "Saved refined model\n";
 
 	// Done. Now loop forever to keep terminal from closing
 	std::cout << "done\n";

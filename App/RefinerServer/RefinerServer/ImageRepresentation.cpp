@@ -8,6 +8,7 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 	Eigen::Matrix4f pCameraViewTransform,
 	Eigen::Matrix4f pCameraProjectionTransform)
 	:filename(filename){
+	
 	//load PNG
 	std::vector<unsigned char> png;
 	unsigned width, height;
@@ -17,6 +18,7 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 
 	//prepare openCV buffers
 	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
+	//ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_COLOR);			//BRG
 	x_size = ocvImage.cols;
 	y_size = ocvImage.rows; // really needed if we have width and height? (l. 12)
 
@@ -91,7 +93,7 @@ Eigen::Vector3d ImageRepresentation::project2dto3d(Eigen::Vector3d surface_norma
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
-float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size) {
+void ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, float corrGBRG[]) {
 
 	// Nomencalture: 
 	// hpoint:	homogenous 2D image plane point (->3D)
@@ -106,6 +108,9 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::Mat img_c2 = image2.ocvImage;
 	cv::Mat patch1 = cv::Mat::zeros(patch_size,  img_c1.type());
 	cv::Mat patch2 = cv::Mat::zeros(patch_size, img_c1.type());
+	cv::Mat patch1BRG[3];
+	cv::Mat patch2BRG[3];
+
 
 	// get ex- & intrinsics of camera
 	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
@@ -170,12 +175,34 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	M = cv::getPerspectiveTransform(p_c2, p_c1);
 
 	// and apply perspective transform to "undistort" patch in image 2 by mapping it onto target frame
-	cv::warpPerspective(img_c2, patch2, M, patch2.size());
+	// yields patch2
+	cv::warpPerspective(img_c2, patch2, M, patch2.size());						// extracting and undistorting patch2 from img_c2
 
-	cv::Rect patch(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);
-	cv::Mat correlation;
-	patch1 = cv::Mat(img_c1, patch);
-	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
+
+	cv::Rect patch(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);		
+	patch1 = cv::Mat(img_c1, patch);											// extracting patch 1 from img_c1	
+
+	//Grayscale
+	//cv::Mat correlation;		
+	//cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);		
+	//return correlation.at<float>(0,0);
+	
+	//Grayscale+BRG
+	cv::Mat correlation[4];		
+
+	cv::split(patch1, patch1BRG);	
+	cv::split(patch2, patch2BRG);
+
+	cv::matchTemplate(patch1, patch2, correlation[0], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Grayscale
+	cv::matchTemplate(patch1BRG[0], patch2BRG[0], correlation[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Blue channel
+	cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlation[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
+	cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlation[3], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
+
+	corrGBRG[0] = correlation[0].at<float>(0, 0);
+	corrGBRG[1] = correlation[1].at<float>(0, 0);
+	corrGBRG[2] = correlation[2].at<float>(0, 0);
+	corrGBRG[3] = correlation[3].at<float>(0, 0);
+	
 
 	// display images and patches, print stuff
 	/*
@@ -203,5 +230,6 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::waitKey(0);
 	*/
 	
-	return correlation.at<float>(0,0);
+
+
 }
