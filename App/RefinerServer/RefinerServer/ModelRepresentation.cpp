@@ -9,7 +9,14 @@ ModelRepresentation::ModelRepresentation()
 	refineTolerance = 0.001; // only adjust vertex if new one is this much better
 	modelToWorldTransform << 0, 0, 1, 0.02,
 							 1, 0, 0, 0.22,
-							 0, 1, 0, -0.05; // sofa dataset
+							 0, 1, 0, -0.05,
+							 0, 0, 0, 1; // sofa dataset
+
+	// happy birthday dataset capture 1
+	//modelToWorldTransform << -1, 0, 0, -1.2379,
+	//						  0, 0, 1, 1.3061,
+	//						  0, 1, 0, -0.02,
+	//						  0, 0, 0, 1;
 }
 
 ModelRepresentation::~ModelRepresentation()
@@ -22,8 +29,6 @@ void ModelRepresentation::subDivide()
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
-	CorrectV = Eigen::MatrixXd(V.rows(), V.cols());
-	CorrectV << V.col(2), V.col(0), V.col(1);
 	nVertexObservations = Eigen::VectorXi::Zero(nVert);
 	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
 }
@@ -31,12 +36,14 @@ void ModelRepresentation::subDivide()
 bool ModelRepresentation::loadFile(std::string path)
 {
 	//we do it now with libigl
-	igl::readOBJ(path.c_str(), V, F);
+	Eigen::MatrixXd tempV; 
+	igl::readOBJ(path.c_str(), tempV, F);
+	Eigen::MatrixXd tempVh = Eigen::MatrixXd::Constant(tempV.cols()+1, tempV.rows(), 1.0);
+	tempVh.block(0,0,tempV.cols(), tempV.rows()) = tempV.transpose();
+	V = (modelToWorldTransform*tempVh).transpose().block(0, 0, tempV.rows(), 3);
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
-	CorrectV = Eigen::MatrixXd(V.rows(), V.cols());
-	CorrectV << V.col(2), V.col(0), V.col(1);
 	nVertexObservations = Eigen::VectorXi::Zero(nVert);
 	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
 	return true;

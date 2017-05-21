@@ -47,10 +47,9 @@ class ModelRepresentation
 		double refineTolerance;
 
 		Eigen::MatrixXd V; //vertices
-		Eigen::MatrixXd CorrectV;
 		Eigen::MatrixXi F;
 		Eigen::MatrixXd VN; // vertex normals
 		Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores
 		Eigen::VectorXi nVertexObservations; // counter needed to normalize adjustmentScores
-		Eigen::Matrix4f modelToWorldTransform; 
+		Eigen::Matrix4d modelToWorldTransform; 
 	};
