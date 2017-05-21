@@ -87,7 +87,7 @@ int main()
 
 
 	// refine
-	std::string out = refiner.refine(2);
+	std::string out = refiner.refine(1);
 	std::cout << "Finished Refinement \n";
 
 	//  save refined

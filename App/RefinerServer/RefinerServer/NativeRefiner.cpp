@@ -6,7 +6,7 @@
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(9, 9); // to be experimented with - later implement in a parameter file preferably
+	patch_size = cv::Size(9,9); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefiner::reset()
@@ -37,10 +37,11 @@ std::string NativeRefiner::refine(int nReps)
 	std::cout << "Number of vertices: " << model.nVert << std::endl;
 	int nAdj;
 	for(int i=0; i<nReps; i++){
-		std::cout << "Computing Visibility..." << std::endl;
+		std::cout << "Computing visibility..." << std::endl;
 		computeVisibility();
-		std::cout << "Computing Adjustment Scores..." << std::endl;
+		std::cout << "Computing adjustment scores..." << std::endl;
 		computeAdjustmentScores();
+		std::cout << "Adjusting vertices..." << std::endl;
 		nAdj = adjustVertices();
 		model.subDivide();
 	}
@@ -102,7 +103,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		}
 	}
 
-	
+
 	if (visible) {
 		//check if occluded
 		//positional vector
@@ -119,6 +120,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 			visible = false;
 		}
 	}
+	
 	return visible;
 }
 
@@ -175,7 +177,7 @@ int NativeRefiner::adjustVertices() {
 				bestVertex = i;
 			}
 		}
-		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 2)) {
+		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v)){// + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 2)) {
 			model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
 			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
