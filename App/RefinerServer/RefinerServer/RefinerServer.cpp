@@ -58,12 +58,14 @@ int main()
 	NativeRefiner refiner;
 	Eigen::Matrix4f intrinsic;
 	Eigen::Matrix4f extrinsic;
-	std::string path = "C:/SofaData/"; // path to dataset
+	//std::string path = "C:/SofaData/"; // path to dataset
+	std::string path = "C:/HappyBirthday/";
 	std::string temp;
 	std::string path_with_prefix = path + "*.png";
 
 	// loading model
-	refiner.addInitModel(path + "sofa.obj");
+	//refiner.addInitModel(path + "sofa.obj");
+	refiner.addInitModel(path + "SpatialMapping_1.obj");
 
 	// load all pictures and matrices	
 		std::wstring search_path = std::wstring(path_with_prefix.begin(), path_with_prefix.end());
@@ -76,7 +78,7 @@ int main()
 					temp = std::string(ws.begin(), ws.end());
 					loadMats(extrinsic, intrinsic, path+ temp + ".matr");
 					refiner.addPicture(path + temp, extrinsic, intrinsic);
-					std::cout << "loaded picture and matr for " << temp << " \n";
+					std::cout << "loaded picture and matrix for " << temp << " \n";
 				}
 			} while (::FindNextFile(hFind, &fd));
 			::FindClose(hFind);
@@ -85,7 +87,7 @@ int main()
 
 
 	// refine
-	std::string out = refiner.refine(1);
+	std::string out = refiner.refine(2);
 	std::cout << "Finished Refinement \n";
 
 	//  save refined

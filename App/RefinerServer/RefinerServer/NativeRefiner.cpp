@@ -42,7 +42,7 @@ std::string NativeRefiner::refine(int nReps)
 		std::cout << "Computing Adjustment Scores..." << std::endl;
 		computeAdjustmentScores();
 		nAdj = adjustVertices();
-		std::cout << "Percentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
+		model.subDivide();
 	}
 	return "done";
 }
@@ -65,8 +65,11 @@ int NativeRefiner::computeVisibility() {
 				nVis++;
 			}
 		}
+		if (v % 100 == 0) {
+			progressPrint(v, model.nVert);
+		}
 	}
-	std::cout << "finished computing visibility. number of visible vertices: " << nVis << std::endl;
+	std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
 	return nVis;
 }
 
@@ -153,8 +156,11 @@ int NativeRefiner::computeAdjustmentScores() {
 				}
 			}
 		}
+		if (v % 100 == 0) {
+			progressPrint(v, model.nVert);
+		}
 	}
-	std::cout << "finished computing adjustmentScores." << std::endl;
+	std::cout << "\nfinished computing adjustmentScores." << std::endl;
 	return 0;
 }
 
@@ -172,8 +178,26 @@ int NativeRefiner::adjustVertices() {
 		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 2)) {
 			model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
-			std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
+			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
+		}
+		if (v % 100 == 0) {
+			progressPrint(v, model.nVert);
 		}
 	}
+	std::cout << "\nFinished adjusting Vertices.\nPercentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
 	return nAdj;
+}
+
+void NativeRefiner::progressPrint(int n, int m) {
+	int barWidth = 70;
+	float progress = (((float)n) / ((float)m));
+	std::cout << "[";
+	int pos = barWidth * progress;
+	for (int i = 0; i < barWidth; ++i) {
+		if (i < pos) std::cout << "=";
+		else if (i == pos) std::cout << ">";
+		else std::cout << " ";
+	}
+	std::cout << "] " << int(progress*100.0) << " %\r";
+	std::cout.flush();
 }

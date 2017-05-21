@@ -93,6 +93,11 @@
 		/// </summary>
 		int adjustVertices();
 
+		/// <summary>
+		/// Function to print progress to Console
+		/// </summary>
+		void progressPrint(int n, int m);
+
 
 		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
 	private:

@@ -4,19 +4,19 @@
 
 ModelRepresentation::ModelRepresentation()
 {
-	nStepsDepthSearch = 11;
-	stepSize = 0.01; 
+	nStepsDepthSearch = 21;
+	stepSize = 0.005; 
 	refineTolerance = 0.001; // only adjust vertex if new one is this much better
-	modelToWorldTransform << 0, 0, 1, 0.02,
-							 1, 0, 0, 0.22,
-							 0, 1, 0, -0.05,
-							 0, 0, 0, 1; // sofa dataset
+	//modelToWorldTransform << 0, 0, 1, 0.02,
+	//						 1, 0, 0, 0.22,
+	//						 0, 1, 0, -0.05,
+	//						 0, 0, 0, 1; // sofa dataset
 
 	// happy birthday dataset capture 1
-	//modelToWorldTransform << -1, 0, 0, -1.2379,
-	//						  0, 0, 1, 1.3061,
-	//						  0, 1, 0, -0.02,
-	//						  0, 0, 0, 1;
+	modelToWorldTransform << -1, 0, 0, -1.2379,
+							  0, 0, 1, 1.3061,
+							  0, 1, 0, -0.02,
+								  0, 0, 0, 1;
 }
 
 ModelRepresentation::~ModelRepresentation()
