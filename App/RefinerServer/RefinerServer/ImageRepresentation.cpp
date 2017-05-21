@@ -70,7 +70,7 @@ Eigen::Vector3d ImageRepresentation::project2dto3d(Eigen::Vector3d surface_norma
 	Eigen::Matrix3d K = CameraProjectionTransform.block<3,3>(0,0).cast <double>();		// camera calibration matrix
 
 	// Relative pixel position
-	double u = pixel.x /((double) x_size) * 2.0 - 1.0;											// from pixel values to relative values following the convention
+	double u = pixel.x /((double) x_size) * 2.0 - 1.0;									// from pixel values to relative values following the convention
 	double v = pixel.y /((double) y_size) * 2.0 - 1.0;
 	Eigen::Vector3d imgCoord(u, v, 1);													// homogenize
 
@@ -118,7 +118,7 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	double pix_u = (u + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
 	double pix_v = (v + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
 
-	// check if out-of-bounds (conservative - could do striclty less-than)
+		// check if out-of-bounds (conservative - could do striclty less-than)
 	if (pix_u <= patch_size.width / 2 || pix_v <= patch_size.height / 2 || 
 		pix_u >= x_size - patch_size.width / 2 || pix_v >= y_size - patch_size.height / 2)
 		return 0;
@@ -148,6 +148,29 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * x_size, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * y_size);
 	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * x_size, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * y_size);
 
+	////////test
+	/*
+	// computing center point of patch2 (projection of vertex into image 2)
+	Eigen::Vector3d vertInImg2 = K2*R_wc2.transpose()*(vertex - C2_w);									// projecting vertex into image 1, step 1												
+	double u2 = vertInImg2(0) / vertInImg2(2);																// u-coordinates of vertex projected into image1 ...
+	double v2 = vertInImg2(1) / vertInImg2(2);																// v-coordinates of vertex projected into image1 ...
+	double pix_u2 = (u2 + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
+	double pix_v2 = (v2 + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
+	// computing corners of patch in image 2 (homogeneous coordinates)
+	cv::Point2d p1_c2(pix_u2 + patch_size.width / 2, pix_v2 + patch_size.height / 2);						// patch in image 1, lower right corner
+	cv::Point2d p2_c2(pix_u2 - patch_size.width / 2, pix_v2 + patch_size.height / 2);						// patch in image 1, lower left corner
+	cv::Point2d p3_c2(pix_u2 + patch_size.width / 2, pix_v2 - patch_size.height / 2);						// patch in image 1, upper right corner
+	cv::Point2d p4_c2(pix_u2 - patch_size.width / 2, pix_v2 - patch_size.height / 2);						// patch in image 1, upper left corner
+	patch2 = cv::Mat(img_c2, cv::Rect(p4_c2.x, p4_c2.y, patch_size.width, patch_size.height));
+	*/
+
+	// check if second patch runs out of frame
+	for (int i = 0; i < 4; i++) {
+		if (p_c2[i].x <= patch_size.width / 2 || p_c2[i].y <= patch_size.height / 2 ||
+			p_c2[i].x >= x_size - patch_size.width / 2 || p_c2[i].y >= y_size - patch_size.height / 2)
+			return 0;
+	}
+
 	// preparing target frame for perspective transform
 	cv::Point2f p_c1[4];
 	p_c1[0] = cv::Point2f(patch_size.width, patch_size.height);											// target frame for perspective transform, lower right corner
@@ -156,10 +179,6 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	p_c1[3] = cv::Point2f(0, 0);
 
 	// compute perspective/affine transformation of new patch...
-	// http://opencvexamples.blogspot.com/2014/01/perspective-transform.html 
-	// Nico's comment: I disagree... according to docs.opencv.org M should be 3x3. In the above link it is initialized as 2x4..?
-	// David's comment: ... it is initialized as 2x4 but then overwritten in line 20
-	//cv::Mat M = cv::Mat::zeros(img_c1.rows, img_c1.cols, img_c1.type());								// transformation matrix
 	cv::Mat M = cv::Mat::zeros(3, 3, img_c1.type());
 	M = cv::getPerspectiveTransform(p_c2, p_c1);
 
@@ -173,13 +192,16 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 
 	// display images and patches, print stuff
 	/*
+	cv::Mat left = img_c1.clone();
+	cv::Mat right = img_c2.clone();
 	std::cout << "M is \n " << M << std::endl;
 	std::cout << "Correlation is: " << correlation.at<float>(0, 0) << std::endl;
 	cv::namedWindow("img1", cv::WINDOW_NORMAL);
 	cv::namedWindow("img2", cv::WINDOW_NORMAL);
 	cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
 	cv::namedWindow("patch2", CV_WINDOW_AUTOSIZE);
-	cv::rectangle(img_c1, patch, cv::Scalar(250, 255, 255), 5, 8, 0);
+	cv::rectangle(left, patch, cv::Scalar(250, 255, 255), 5, 8, 0);
+	//cv::rectangle(right, cv::Rect(p4_c2.x, p4_c2.y, patch_size.width, patch_size.height), cv::Scalar(250, 255, 255), 5, 8, 0);
 	std::vector< cv::Point> contour;
 	contour.push_back(cv::Point((int)p_c2[0].x, (int)p_c2[0].y));
 	contour.push_back(cv::Point((int)p_c2[2].x, (int)p_c2[2].y));
@@ -187,15 +209,94 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	contour.push_back(cv::Point((int)p_c2[1].x, (int)p_c2[1].y));
 	const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
 	int npts = cv::Mat(contour).rows;
-	polylines(img_c2, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
-	//cv::resize(patch1, patch1, cv::Size(output.cols, output.rows));
-	//cv::resize(patch2, patch2, cv::Size(patch2.cols, patch2.rows));
-	cv::imshow("img2", img_c2);
-	cv::imshow("img1", img_c1);
+	polylines(right, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
+	cv::resize(patch1, patch1, cv::Size(150,150));
+	cv::resize(patch2, patch2, cv::Size(150,150));
+	cv::imshow("img2", right);
+	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(0);
+	cv::waitKey(1);
 	*/
-	
+
 	return correlation.at<float>(0,0);
+}
+
+//Compute corrsponding patch in camera 2 given the patch in camera 1 (without projective unwarping - roughly 2x faster)
+float ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size) {
+	// Nomencalture: 
+	// hpoint:	homogenous 2D image plane point (->3D)
+	// hPoint:	homgeneous 3D worl frame point (->4D)
+	// p:		2D image plane point (pixel coordinates)
+	// P:		3D world frame point		 
+	// T_ab:	3x4 matrix describing transformation from frame b to frame a
+	// K:		camera calibration matrix
+
+	// images of camera 1 and camera 2
+	cv::Mat img_c1 = ocvImage;
+	cv::Mat img_c2 = image2.ocvImage;
+	cv::Mat patch1 = cv::Mat::zeros(patch_size, img_c1.type());
+	cv::Mat patch2 = cv::Mat::zeros(patch_size, img_c1.type());
+
+	// get ex- & intrinsics of camera
+	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
+	Eigen::Vector3d C1_w = CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera1 position in world frame (expressed in world frame)
+
+	Eigen::Matrix<double, 3, 3> R_wc2 = image2.CameraViewTransform.block<3, 3>(0, 0).cast <double>();	// camera2 orientation matrix (camera to world)
+	Eigen::Vector3d C2_w = image2.CameraViewTransform.block<3, 1>(0, 3).cast <double>();				// camera1 position in world frame (expressed in world frame)
+
+	Eigen::Matrix3d K1 = CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();					// camera1 calibration matrix 
+	Eigen::Matrix3d K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();			// camera2 calibration matrix 
+																										// computing center point of patch (projection of vertex into image 1)
+	Eigen::Vector3d vertInImg1 = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
+	double u1 = vertInImg1(0) / vertInImg1(2);																// u-coordinates of vertex projected into image1 ...
+	double v1 = vertInImg1(1) / vertInImg1(2);																// v-coordinates of vertex projected into image1 ...
+	double pix_u1 = (u1 + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
+	double pix_v1 = (v1 + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
+
+																											// check if out-of-bounds (conservative - could do striclty less-than)
+	if (pix_u1 <= patch_size.width / 2 || pix_v1 <= patch_size.height / 2 ||
+		pix_u1 >= x_size - patch_size.width / 2 || pix_v1 >= y_size - patch_size.height / 2)
+		return 0;
+
+	Eigen::Vector3d vertInImg2 = K2*R_wc2.transpose()*(vertex - C2_w);									// projecting vertex into image 2, step 1												
+	double u2 = vertInImg2(0) / vertInImg2(2);															// u-coordinates of vertex projected into image2 ...
+	double v2 = vertInImg2(1) / vertInImg2(2);															// v-coordinates of vertex projected into image2 ...
+	double pix_u2 = (u2 + 1) / 2 * x_size;																// ... expressed in pixel coordinates
+	double pix_v2 = (v2 + 1) / 2 * y_size;																// ... expressed in pixel coordinates
+
+																										// check if out-of-bounds (conservative - could do striclty less-than)
+	if (pix_u2 <= patch_size.width / 2 || pix_v2 <= patch_size.height / 2 ||
+		pix_u2 >= x_size - patch_size.width / 2 || pix_v2 >= y_size - patch_size.height / 2)
+		return 0;
+
+	cv::Point2d p4_c1(pix_u1 - patch_size.width / 2, pix_v1 - patch_size.height / 2);					// patch in image 1, upper left corner
+	cv::Point2d p4_c2(pix_u2 - patch_size.width / 2, pix_v2 - patch_size.height / 2);
+	cv::Rect patch1Boundary(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);
+	cv::Rect patch2Boundary(p4_c2.x, p4_c2.y, patch_size.width, patch_size.height);
+	cv::Mat correlation;
+	patch1 = cv::Mat(img_c1, patch1Boundary);
+	patch2 = cv::Mat(img_c2, patch2Boundary);
+	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
+
+	// display images and patches, print stuff
+	/*
+	cv::Mat left = img_c1.clone();
+	cv::Mat right = img_c2.clone();
+	std::cout << "Correlation is: " << correlation.at<float>(0, 0) << std::endl;
+	cv::namedWindow("img1", cv::WINDOW_NORMAL);
+	cv::namedWindow("img2", cv::WINDOW_NORMAL);
+	cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
+	cv::namedWindow("patch2", CV_WINDOW_AUTOSIZE);
+	cv::rectangle(left, patch1Boundary, cv::Scalar(250, 255, 255), 5, 8, 0);
+	cv::rectangle(right, patch2Boundary, cv::Scalar(250, 255, 255), 5, 8, 0);
+	cv::resize(patch1, patch1, cv::Size(150,150));
+	cv::resize(patch2, patch2, cv::Size(150,150));
+	cv::imshow("img2", right);
+	cv::imshow("img1", left);
+	cv::imshow("patch1", patch1);
+	cv::imshow("patch2", patch2);
+	cv::waitKey(1);
+	*/
+	return correlation.at<float>(0, 0);
 }

@@ -28,6 +28,13 @@
 		/// </summary>
 		float computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
 		
+		/// <summary>
+		/// Compute corrsponding patch in camera 2 given the patch in camera 1 (without unwarping)
+		/// </summary>
+		float computePatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
+
+
+
 		const std::string filename;
 		std::vector<unsigned char> image;
 		cv::Mat ocvImage;

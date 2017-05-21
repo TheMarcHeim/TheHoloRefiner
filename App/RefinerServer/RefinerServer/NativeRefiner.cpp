@@ -6,7 +6,7 @@
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(9, 9); // to be experimented with - later implement in a parameter file preferably
+	patch_size = cv::Size(9,9); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefiner::reset()
@@ -37,10 +37,11 @@ std::string NativeRefiner::refine(int nReps)
 	std::cout << "Number of vertices: " << model.nVert << std::endl;
 	int nAdj;
 	for(int i=0; i<nReps; i++){
-		std::cout << "Computing Visibility..." << std::endl;
+		std::cout << "Computing visibility..." << std::endl;
 		computeVisibility();
-		std::cout << "Computing Adjustment Scores..." << std::endl;
+		std::cout << "Computing adjustment scores..." << std::endl;
 		computeAdjustmentScores();
+		std::cout << "Adjusting vertices..." << std::endl;
 		nAdj = adjustVertices();
 		model.subDivide();
 	}
@@ -69,6 +70,7 @@ int NativeRefiner::computeVisibility() {
 			progressPrint(v, model.nVert);
 		}
 	}
+	progressPrint(1, 1);
 	std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
 	return nVis;
 }
@@ -102,7 +104,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		}
 	}
 
-	
+
 	if (visible) {
 		//check if occluded
 		//positional vector
@@ -119,6 +121,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 			visible = false;
 		}
 	}
+	
 	return visible;
 }
 
@@ -137,7 +140,7 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	for (int i = 0; i < model.nStepsDepthSearch; i++) {
 		p_current += model.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-1);
-		model.adjustmentScores(i, vertex) += images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size);
+		model.adjustmentScores(i, vertex) += images[view2].computePatchCorrelation(images[view1], n, p_current, patch_size);
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 	} 
 	//std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block(0, vertex,model.nStepsDepthSearch,1) << std::endl << std::endl;
@@ -160,6 +163,7 @@ int NativeRefiner::computeAdjustmentScores() {
 			progressPrint(v, model.nVert);
 		}
 	}
+	progressPrint(1, 1);
 	std::cout << "\nfinished computing adjustmentScores." << std::endl;
 	return 0;
 }
@@ -175,7 +179,7 @@ int NativeRefiner::adjustVertices() {
 				bestVertex = i;
 			}
 		}
-		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 2)) {
+		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 1.2)) {
 			model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
 			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
@@ -184,6 +188,7 @@ int NativeRefiner::adjustVertices() {
 			progressPrint(v, model.nVert);
 		}
 	}
+	progressPrint(1, 1);
 	std::cout << "\nFinished adjusting Vertices.\nPercentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
 	return nAdj;
 }

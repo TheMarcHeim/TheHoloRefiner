@@ -4,9 +4,9 @@
 
 ModelRepresentation::ModelRepresentation()
 {
-	nStepsDepthSearch = 21;
-	stepSize = 0.005; 
-	refineTolerance = 0.001; // only adjust vertex if new one is this much better
+	nStepsDepthSearch = 51;
+	stepSize = 0.0005; 
+	refineTolerance = 0.0001; // only adjust vertex if new one is this much better
 	//modelToWorldTransform << 0, 0, 1, 0.02,
 	//						 1, 0, 0, 0.22,
 	//						 0, 1, 0, -0.05,
