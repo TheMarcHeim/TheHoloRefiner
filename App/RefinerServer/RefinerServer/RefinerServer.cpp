@@ -65,7 +65,7 @@ int main()
 
 	// loading model
 	//refiner.addInitModel(path + "sofa.obj");
-	refiner.addInitModel(path + "SpatialMapping_1.obj");
+	refiner.addInitModel(path + "spatialMap_part.obj");
 
 	// load all pictures and matrices	
 		std::wstring search_path = std::wstring(path_with_prefix.begin(), path_with_prefix.end());
