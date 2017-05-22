@@ -193,7 +193,9 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 		//std::cout << "regularization: " << -(isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
 		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
-		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
+		
+		
+
 		if (model.adjustmentScores(i, vertex) != model.adjustmentScores(i, vertex)) {
 			std::cout << "nan" << std::endl;
 		}

@@ -57,8 +57,8 @@ class ModelRepresentation
 		Eigen::MatrixXd V; //vertices
 		Eigen::MatrixXi F;
 		Eigen::MatrixXd VN; // vertex normals
-		Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores
-		Eigen::VectorXi nVertexObservations; // counter needed to normalize adjustmentScores
+		Eigen::MatrixXd adjustmentScores; //columns: vertices, rows: adjustmentScores
+		Eigen::VectorXd nVertexObservations; // counter needed to normalize adjustmentScores
 		Eigen::Matrix4d modelToWorldTransform; 
 
 	};

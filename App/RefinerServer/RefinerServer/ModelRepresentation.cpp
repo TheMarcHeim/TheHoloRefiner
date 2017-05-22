@@ -32,8 +32,8 @@ void ModelRepresentation::subDivide()
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
-	nVertexObservations = Eigen::VectorXi::Zero(nVert);
-	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
+	nVertexObservations = Eigen::VectorXd::Zero(nVert);
+	adjustmentScores = Eigen::MatrixXd::Zero(nStepsDepthSearch, nVert);
 }
 
 bool ModelRepresentation::loadFile(std::string path)
@@ -50,8 +50,8 @@ bool ModelRepresentation::loadFile(std::string path)
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
-	nVertexObservations = Eigen::VectorXi::Zero(nVert);
-	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
+	nVertexObservations = Eigen::VectorXd::Zero(nVert);
+	adjustmentScores = Eigen::MatrixXd::Zero(nStepsDepthSearch, nVert);
 	std::cout << "\n" << "Number of vertices: " << nVert << "\n";
 	std::cout << "\n" << "Number of triangles: " << nTriang << "\n";
 
