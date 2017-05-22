@@ -19,7 +19,7 @@ ModelRepresentation::~ModelRepresentation()
 
 void ModelRepresentation::subDivide()
 {
-	igl::upsample(V, F, 3);
+	igl::upsample(V, F, 2);
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
@@ -69,3 +69,31 @@ void ModelRepresentation::computeNormals()
 {
 	igl::per_vertex_normals(V, F, VN);		// calculates normals and feeds them into VN (rowwise)
 }
+
+bool ModelRepresentation::computeCenter(int verticeID, Eigen::Vector3d& midpoint)
+{
+	std::set<int> vertices;
+	int insertCount = 0;
+	for (int i = 0; i < F.rows(); i++) {
+		for (int c = 0; c < 3; c++) {
+			if (F(i, c) == verticeID) {
+				for (int cc = 0; cc < 3; cc++)
+					{
+						if (cc != c) {
+							insertCount++;
+							vertices.insert(F(i, cc));
+						}
+					}
+				break;
+			}
+		}
+	}
+	if (insertCount != vertices.size() * 2) return false;
+	midpoint = Eigen::Vector3d::Zero();
+	for (auto vid : vertices) {
+		midpoint += V.row(vid).transpose();
+	}
+	midpoint /= vertices.size();
+	return true;
+}
+

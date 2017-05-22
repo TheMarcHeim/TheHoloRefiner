@@ -189,7 +189,7 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	if (colorFlag == 0) {			//Grayscale
 
 		cv::Mat correlation;
-		cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR);
+		cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
 
 		return correlation.at<float>(0, 0);
 	}

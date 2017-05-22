@@ -10,6 +10,7 @@
 #include<igl/per_corner_normals.h>
 #include<igl/readOBJ.h>
 #include <igl/writeOBJ.h>
+#include <set>
 
 //use this for internal representation
 
@@ -39,6 +40,13 @@ class ModelRepresentation
 		/// compute normals at vertices
 		/// </summary>
 		void computeNormals();
+
+		/// <summary>
+		/// compute midpoint of vertices of adjacent triangels
+		/// returns false if vertex is at border of mesh
+		/// </summary>
+		bool computeCenter(int verticeID, Eigen::Vector3d& midpoint);
+
 		
 		int nTriang;
 		int nVert;

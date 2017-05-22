@@ -97,7 +97,6 @@
 		/// </summary>
 		int adjustVertices();
 
-
 		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
 	private:
 		ModelRepresentation model;

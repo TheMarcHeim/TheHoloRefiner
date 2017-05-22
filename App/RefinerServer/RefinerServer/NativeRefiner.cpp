@@ -37,7 +37,7 @@ std::string NativeRefiner::refine(int nReps)
 {
 
 	std::cout << "Number of before subdivision vertices: " << model.nVert << std::endl;
-	model.subDivide();
+	//model.subDivide();
 	std::cout << "Number of vertices after subdivision: " << model.nVert << std::endl;
 	int nAdj;
 
@@ -198,14 +198,22 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	float weight =  images[view1].getViewQuality(p, n, images[view2]);
 
 	model.nVertexObservations(vertex)+=weight; // needed for averaging
+
 	
+
 	for (int i = 0; i < model.nStepsDepthSearch; i++) {
-		
 		p_current += model.stepSize*n;
+		//regularization Term
+
+
+		//std::cout <<"match: "<< images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0)<<std::endl;
+		//std::cout << "regularization: " << -(isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
-		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size,0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
+		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 	} 
+
+
 
 	//std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
 }
@@ -219,7 +227,7 @@ int NativeRefiner::computeAdjustmentScores() {
 
 	for (int v = 0; v < model.nVert; v++) {
 		for (int firstSight = 0; firstSight < nImages; firstSight++) {
-			if (visibility(v, firstSight) == 1 && firstSight<nImages-1) {
+			if (visibility(v, firstSight) == 1 && firstSight < nImages - 1) {
 				for (int secondSight = firstSight + 1; secondSight < nImages; secondSight++) {
 					if (visibility(v, secondSight) == 1) {
 						computeVertexAdjustmentScores(v, firstSight, secondSight);
@@ -227,7 +235,26 @@ int NativeRefiner::computeAdjustmentScores() {
 				}
 			}
 		}
+
+		const double lambda = 100000;
+		Eigen::Vector3d midPoint;
+		bool isInside = model.computeCenter(v, midPoint);
+
+		Eigen::Vector3d p(model.V(v, 2), model.V(v, 0), model.V(v, 1));
+		Eigen::Vector3d n(model.VN(v, 2), model.VN(v, 0), model.VN(v, 1));
+		Eigen::Vector3d p_current = p - n*model.stepSize*model.nStepsDepthSearch / 2;
+		Eigen::Vector3d dtmp = midPoint - p_current;
+
+		for (int i = 0; i < model.nStepsDepthSearch; i++) {
+
+			p_current += model.stepSize*n;
+			dtmp = midPoint - p_current;
+			model.adjustmentScores[i, v] += (isInside ? dtmp.squaredNorm()*lambda : 0);
+
+		}
 	}
+
+	
 	std::cout << "finished computing adjustmentScores." << std::endl;
 	return 0;
 }
