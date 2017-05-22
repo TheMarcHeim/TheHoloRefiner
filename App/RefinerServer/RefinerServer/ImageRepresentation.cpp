@@ -228,7 +228,7 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	}
 	// display images and patches, print stuff
 	
-	cv::Mat left = img_c1.clone();
+	/*cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	std::cout << "M is \n " << M << std::endl;
 	std::cout << "Correlation is: " << correlation << std::endl;
@@ -252,7 +252,7 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(1);
+	cv::waitKey(1);*/
 
 	return 1;// correlation;
 }
