@@ -51,10 +51,11 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 							pCameraViewTransform(1,0), -pCameraViewTransform(1,1), -pCameraViewTransform(1,2), pCameraViewTransform(1,3),
 							pCameraViewTransform(3,0), pCameraViewTransform(3,1), pCameraViewTransform(3,2), pCameraViewTransform(3,3);
 
-	std::cout << "\n";
+	/*std::cout << "\n";
 	std::cout << "CVT" << "\n";
 	std::cout << CameraViewTransform;
-	std::cout << "\n";
+	std::cout << "\n";*/
+
 
 	/*
 	CameraProjectionTransform << pCameraProjectionTransform.m11, pCameraProjectionTransform.m12, -pCameraProjectionTransform.m13, pCameraProjectionTransform.m14,
@@ -206,9 +207,10 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	double correlation = 0;
 	if (colorFlag == 0) {			//Grayscale
 		cv::Mat correlationMat;
-		cv::matchTemplate(patch1, patch2, correlationMat, cv::TemplateMatchModes::TM_CCORR_NORMED);
+		cv::matchTemplate(patch1, patch2, correlationMat, cv::TemplateMatchModes::TM_SQDIFF);
 
 		correlation = correlationMat.at<float>(0, 0);
+		std::cout << "corr:" << correlation << std::endl;
 	}
 	else {							//BRG
 
@@ -224,11 +226,11 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 		correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
 	}
 	// display images and patches, print stuff
-	/*
-	cv::Mat left = img_c1.clone();
+	
+	/*cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	std::cout << "M is \n " << M << std::endl;
-	std::cout << "Correlation is: " << correlation.at<float>(0, 0) << std::endl;
+	std::cout << "Correlation is: " << correlation << std::endl;
 	cv::namedWindow("img1", cv::WINDOW_NORMAL);
 	cv::namedWindow("img2", cv::WINDOW_NORMAL);
 	cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
@@ -249,8 +251,8 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(1);
-	*/
+	cv::waitKey(1);*/
+
 	return correlation;
 }
 
@@ -349,6 +351,10 @@ float ImageRepresentation::getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3
 	float weight = (-cos(angle) + 1) / 2;	//viewing angle 45° -> weight 1, viewing angle 0° or >=90° -> weight 0
 
 	weight *= VtoC1.normalized().dot(normal)*VtoC2.normalized().dot(normal);
+
+	if (abs(weight) < 0.00001) {
+		std::cout << "weight = 0" << std::endl;
+	}
 
 	return weight;
 	

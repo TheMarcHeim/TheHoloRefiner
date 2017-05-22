@@ -45,7 +45,7 @@ std::string NativeRefiner::refine(int nReps)
 		computeAdjustmentScores();
 		std::cout << "Adjusting vertices..." << std::endl;
 		nAdj = adjustVertices();
-		model.subDivide();
+		//model.subDivide();
 		std::cout << "Percentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
 		
 		// save intermediate refinement steps...
@@ -182,6 +182,8 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 
 
 	float weight =  images[view1].getViewQuality(p, n, images[view2]);
+	
+
 	model.nVertexObservations(vertex)+=weight; // needed for averaging
 
 
@@ -192,8 +194,11 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
 		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
+		if (model.adjustmentScores(i, vertex) != model.adjustmentScores(i, vertex)) {
+			std::cout << "nan" << std::endl;
+		}
 	} 
-	//std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
+	std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
 
 }
 
@@ -210,29 +215,32 @@ int NativeRefiner::computeAdjustmentScores() {
 				for (int secondSight = firstSight + 1; secondSight < nImages; secondSight++) {
 					if (visibility(v, secondSight) == 1) {
 						computeVertexAdjustmentScores(v, firstSight, secondSight);
+
 					}
 				}
 			}
 		}
 
 		// regularization of mesh
-		const double lambda = 100000;
+		//const double lambda = 100000;
+		/*const double lambda = 0;
 		Eigen::Vector3d midPoint;
 		bool isInside = model.computeCenter(v, midPoint);
 		Eigen::Vector3d p(model.V(v, 2), model.V(v, 0), model.V(v, 1));
 		Eigen::Vector3d n(model.VN(v, 2), model.VN(v, 0), model.VN(v, 1));
 		Eigen::Vector3d p_current = p - n*model.stepSize*model.nStepsDepthSearch / 2;
 		Eigen::Vector3d dtmp = midPoint - p_current;
+		
 		for (int i = 0; i < model.nStepsDepthSearch; i++) {
 			p_current += model.stepSize*n;
 			dtmp = midPoint - p_current;
-			model.adjustmentScores[i, v] += (isInside ? dtmp.squaredNorm()*lambda : 0);
-		}
+			model.adjustmentScores(i, v) += (isInside ? dtmp.squaredNorm()*lambda : 0);
+		}*/
 
 		// print progress
-		if (v % 100 == 0) {
+		//if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
-		}
+		//}
 	}
 	progressPrint(1, 1);
 	std::cout << "\nfinished computing adjustmentScores." << std::endl;		
@@ -255,7 +263,7 @@ int NativeRefiner::adjustVertices() {
 		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 1.2)) {
 			model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
-			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
+			std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
 		}
 		if (v % 100 == 0) {
 			progressPrint(v, model.nVert);

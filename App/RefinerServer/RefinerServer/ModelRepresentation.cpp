@@ -8,17 +8,18 @@ ModelRepresentation::ModelRepresentation()
 
 	nStepsDepthSearch = 51;
 	stepSize = 0.0005; 
-	refineTolerance = 0.0001; // only adjust vertex if new one is this much better
-	//modelToWorldTransform << 0, 0, 1, 0.02,
-	//						 1, 0, 0, 0.22,
-	//						 0, 1, 0, -0.05,
-	//						 0, 0, 0, 1; // sofa dataset
+	refineTolerance = 0.000; // only adjust vertex if new one is this much better
+	
+	modelToWorldTransform << 0, 0, 1, 0.02,
+							 1, 0, 0, 0.19,
+							 0, 1, 0, -0.06,
+							 0, 0, 0, 1; // sofa dataset
 
 	// happy birthday dataset capture 1
-	modelToWorldTransform << -1, 0, 0, -1.2379,
+	/*modelToWorldTransform << -1, 0, 0, -1.2379,
 							  0, 0, 1, 1.3061,
 							  0, 1, 0, -0.02,
-								  0, 0, 0, 1;
+								  0, 0, 0, 1;*/
 }
 
 ModelRepresentation::~ModelRepresentation()
@@ -41,9 +42,11 @@ bool ModelRepresentation::loadFile(std::string path)
 
 	Eigen::MatrixXd tempV; 
 	igl::readOBJ(path.c_str(), tempV, F);
+
 	Eigen::MatrixXd tempVh = Eigen::MatrixXd::Constant(tempV.cols()+1, tempV.rows(), 1.0);
 	tempVh.block(0,0,tempV.cols(), tempV.rows()) = tempV.transpose();
 	V = (modelToWorldTransform*tempVh).transpose().block(0, 0, tempV.rows(), 3);
+	
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
