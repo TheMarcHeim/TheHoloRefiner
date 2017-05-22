@@ -45,20 +45,20 @@ class ModelRepresentation
 		/// compute midpoint of vertices of adjacent triangels
 		/// returns false if vertex is at border of mesh
 		/// </summary>
-		bool computeCenter(int verticeID, Eigen::Vector3d& midpoint);
+		bool computeCenter(int verticeID, Eigen::Vector3f& midpoint);
 
 		
 		int nTriang;
 		int nVert;
 		int nStepsDepthSearch;
-		double stepSize;
-		double refineTolerance;
+		float stepSize;
+		float refineTolerance;
 
-		Eigen::MatrixXd V; //vertices
+		Eigen::MatrixXf V; //vertices
 		Eigen::MatrixXi F;
-		Eigen::MatrixXd VN; // vertex normals
-		Eigen::MatrixXd adjustmentScores; //columns: vertices, rows: adjustmentScores
-		Eigen::VectorXd nVertexObservations; // counter needed to normalize adjustmentScores
-		Eigen::Matrix4d modelToWorldTransform; 
+		Eigen::MatrixXf VN; // vertex normals
+		Eigen::MatrixXf adjustmentScores; //columns: vertices, rows: adjustmentScores
+		Eigen::VectorXf nVertexObservations; // counter needed to normalize adjustmentScores
+		Eigen::Matrix4f modelToWorldTransform; 
 
 	};

@@ -5,8 +5,8 @@
 
 
 ImageRepresentation::ImageRepresentation(std::string filename,
-	Eigen::Matrix4d pCameraViewTransform,
-	Eigen::Matrix4d pCameraProjectionTransform) {
+	Eigen::Matrix4f pCameraViewTransform,
+	Eigen::Matrix4f pCameraProjectionTransform) {
 	
 	//load PNG
 	std::vector<unsigned char> png;
@@ -62,38 +62,38 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 								 pCameraProjectionTransform.m31, pCameraProjectionTransform.m32, -pCameraProjectionTransform.m33, pCameraProjectionTransform.m34,
 								 pCameraProjectionTransform.m41, pCameraProjectionTransform.m42, -pCameraProjectionTransform.m43, pCameraProjectionTransform.m44;*/
 	
-	Eigen::Vector4d diag;
+	Eigen::Vector4f diag;
 	diag << 1, 1, -1, -1;
-	Eigen::Matrix4d diagM = diag.asDiagonal();
+	Eigen::Matrix4f diagM = diag.asDiagonal();
 	CameraProjectionTransform = pCameraProjectionTransform*diagM;
 	
 }
 
 //compute 3D projection of 2D point "pixel" onto surface defined by normal "surface_normal" and vertex "vertex"
-Eigen::Vector3d ImageRepresentation::project2dto3d(Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Point2d pixel){
+Eigen::Vector3f ImageRepresentation::project2dto3d(Eigen::Vector3f surface_normal, Eigen::Vector3f vertex, cv::Point2f pixel){
 
 	// get ex- & intrinsics of camera
-	Eigen::Matrix3d R_wc = CameraViewTransform.block<3,3>(0,0).cast <double>();			// camera orientation matrix (camera to world)
-	Eigen::Vector3d C_w = CameraViewTransform.block<3, 1>(0, 3).cast <double>();		// camera position in world frame (expressed in world frame)
-	Eigen::Matrix3d K = CameraProjectionTransform.block<3,3>(0,0).cast <double>();		// camera calibration matrix
+	Eigen::Matrix3f R_wc = CameraViewTransform.block<3,3>(0,0);			// camera orientation matrix (camera to world)
+	Eigen::Vector3f C_w = CameraViewTransform.block<3, 1>(0, 3);		// camera position in world frame (expressed in world frame)
+	Eigen::Matrix3f K = CameraProjectionTransform.block<3,3>(0,0);		// camera calibration matrix
 
 	// Relative pixel position
-	double u = pixel.x /((double) x_size) * 2.0 - 1.0;									// from pixel values to relative values following the convention
-	double v = pixel.y /((double) y_size) * 2.0 - 1.0;
-	Eigen::Vector3d imgCoord(u, v, 1);													// homogenize
+	float u = pixel.x /((float) x_size) * 2.0 - 1.0;									// from pixel values to relative values following the convention
+	float v = pixel.y /((float) y_size) * 2.0 - 1.0;
+	Eigen::Vector3f imgCoord(u, v, 1);													// homogenize
 
 	// compute intersection point of viewing ray and plane
-	Eigen::Vector3d p_temp = K.inverse()*imgCoord;										// image plane to camera frame
-	Eigen::Vector3d p_w = R_wc*p_temp;													// camera frame to world frame
+	Eigen::Vector3f p_temp = K.inverse()*imgCoord;										// image plane to camera frame
+	Eigen::Vector3f p_w = R_wc*p_temp;													// camera frame to world frame
 
 	double lambda = (vertex - C_w).dot(surface_normal) / (p_w.dot(surface_normal));
-	Eigen::Vector3d P_w = C_w + lambda*p_w;												//point in world frame
+	Eigen::Vector3f P_w = C_w + lambda*p_w;												//point in world frame
 	
 	return P_w;
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
-double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, int colorFlag) {
+float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3f surface_normal, Eigen::Vector3f vertex, cv::Size patch_size, int colorFlag) {
 
 	
 	// Nomencalture: 
@@ -114,21 +114,21 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 
 
 	// get ex- & intrinsics of camera
-	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
-	Eigen::Vector3d C1_w = CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera1 position in world frame (expressed in world frame)
+	Eigen::Matrix<float, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0);			// camera1 orientation matrix (camera to world)
+	Eigen::Vector3f C1_w = CameraViewTransform.block<3, 1>(0, 3);						// camera1 position in world frame (expressed in world frame)
 	
-	Eigen::Matrix<double, 3, 3> R_wc2 = image2.CameraViewTransform.block<3, 3>(0, 0).cast <double>();	// camera2 orientation matrix (camera to world)
-	Eigen::Vector3d C2_w = image2.CameraViewTransform.block<3, 1>(0, 3).cast <double>();				// camera1 position in world frame (expressed in world frame)
+	Eigen::Matrix<float, 3, 3> R_wc2 = image2.CameraViewTransform.block<3, 3>(0, 0);	// camera2 orientation matrix (camera to world)
+	Eigen::Vector3f C2_w = image2.CameraViewTransform.block<3, 1>(0, 3);				// camera1 position in world frame (expressed in world frame)
 	
-	Eigen::Matrix3d K1 = CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();					// camera1 calibration matrix 
-	Eigen::Matrix3d K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();			// camera2 calibration matrix 
+	Eigen::Matrix3f K1 = CameraProjectionTransform.block<3, 3>(0, 0);					// camera1 calibration matrix 
+	Eigen::Matrix3f K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0);			// camera2 calibration matrix 
 
 	// computing center point of patch (projection of vertex into image 1)
-	Eigen::Vector3d vertInImg = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
-	double u = vertInImg(0) / vertInImg(2);																// u-coordinates of vertex projected into image1 ...
-	double v = vertInImg(1) / vertInImg(2);																// v-coordinates of vertex projected into image1 ...
-	double pix_u = (u + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
-	double pix_v = (v + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
+	Eigen::Vector3f vertInImg = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
+	float u = vertInImg(0) / vertInImg(2);																// u-coordinates of vertex projected into image1 ...
+	float v = vertInImg(1) / vertInImg(2);																// v-coordinates of vertex projected into image1 ...
+	float pix_u = (u + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
+	float pix_v = (v + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
 
 
 		// check if out-of-bounds (conservative - could do striclty less-than)
@@ -139,22 +139,22 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	
 	
 	// computing corners of patch in image 1 (homogeneous coordinates)
-	cv::Point2d p1_c1(pix_u + patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower right corner
-	cv::Point2d p2_c1(pix_u - patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower left corner
-	cv::Point2d p3_c1(pix_u + patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper right corner
-	cv::Point2d p4_c1(pix_u - patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper left corner
+	cv::Point2f p1_c1(pix_u + patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower right corner
+	cv::Point2f p2_c1(pix_u - patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower left corner
+	cv::Point2f p3_c1(pix_u + patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper right corner
+	cv::Point2f p4_c1(pix_u - patch_size.width / 2, pix_v - patch_size.height / 2);						// patch in image 1, upper left corner
 
 	// computing 3D projections of patch corners
-	Eigen::Vector3d P1_w = project2dto3d(surface_normal, vertex, p1_c1);									// Corner points of projected patch from image 1 in world frame
-	Eigen::Vector3d P2_w = project2dto3d(surface_normal, vertex, p2_c1);
-	Eigen::Vector3d P3_w = project2dto3d(surface_normal, vertex, p3_c1);
-	Eigen::Vector3d P4_w = project2dto3d(surface_normal, vertex, p4_c1);
+	Eigen::Vector3f P1_w = project2dto3d(surface_normal, vertex, p1_c1);									// Corner points of projected patch from image 1 in world frame
+	Eigen::Vector3f P2_w = project2dto3d(surface_normal, vertex, p2_c1);
+	Eigen::Vector3f P3_w = project2dto3d(surface_normal, vertex, p3_c1);
+	Eigen::Vector3f P4_w = project2dto3d(surface_normal, vertex, p4_c1);
 
 	// compute projection of 3d points into image 2 (homgeneous coordinates) ...
-	Eigen::Vector3d hp1_c2 = K2*R_wc2.transpose()*(P1_w - C2_w);
-	Eigen::Vector3d hp2_c2 = K2*R_wc2.transpose()*(P2_w - C2_w);
-	Eigen::Vector3d hp3_c2 = K2*R_wc2.transpose()*(P3_w - C2_w);
-	Eigen::Vector3d hp4_c2 = K2*R_wc2.transpose()*(P4_w - C2_w);
+	Eigen::Vector3f hp1_c2 = K2*R_wc2.transpose()*(P1_w - C2_w);
+	Eigen::Vector3f hp2_c2 = K2*R_wc2.transpose()*(P2_w - C2_w);
+	Eigen::Vector3f hp3_c2 = K2*R_wc2.transpose()*(P3_w - C2_w);
+	Eigen::Vector3f hp4_c2 = K2*R_wc2.transpose()*(P4_w - C2_w);
 
 	// and normalize them to get the pixel coordinates which define the source frame for the perspective transform	
 	cv::Point2f p_c2[4];
@@ -204,13 +204,13 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	
 	patch1 = cv::Mat(img_c1, patch);											// extracting patch 1 from img_c1	
 
-	double correlation = 0;
+	float correlation = 0;
 	
 	if (colorFlag == 0) {			//Grayscale
 		cv::Mat correlationMat;
 		cv::matchTemplate(patch1, patch2, correlationMat, cv::TemplateMatchModes::TM_SQDIFF);
 
-		correlation = correlationMat.at<double>(0, 0);
+		correlation = correlationMat.at<float>(0, 0);
 		std::cout << "corr:" << correlation << std::endl;
 	}
 	else {							//BRG
@@ -224,7 +224,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
 		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
 
-		correlation = (correlationMat[0].at<double>(0, 0) + correlationMat[1].at<double>(0, 0) + correlationMat [2].at<double>(0, 0)) / 3.0;
+		correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
 	}
 	// display images and patches, print stuff
 	
@@ -258,7 +258,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (without projective unwarping - roughly 2x faster)
-double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size) {
+float ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2, Eigen::Vector3f surface_normal, Eigen::Vector3f vertex, cv::Size patch_size) {
 	// Nomencalture: 
 	// hpoint:	homogenous 2D image plane point (->3D)
 	// hPoint:	homgeneous 3D worl frame point (->4D)
@@ -274,31 +274,31 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::Mat patch2 = cv::Mat::zeros(patch_size, img_c1.type());
 
 	// get ex- & intrinsics of camera
-	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
-	Eigen::Vector3d C1_w = CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera1 position in world frame (expressed in world frame)
+	Eigen::Matrix<float, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0);			// camera1 orientation matrix (camera to world)
+	Eigen::Vector3f C1_w = CameraViewTransform.block<3, 1>(0, 3);						// camera1 position in world frame (expressed in world frame)
 
-	Eigen::Matrix<double, 3, 3> R_wc2 = image2.CameraViewTransform.block<3, 3>(0, 0).cast <double>();	// camera2 orientation matrix (camera to world)
-	Eigen::Vector3d C2_w = image2.CameraViewTransform.block<3, 1>(0, 3).cast <double>();				// camera1 position in world frame (expressed in world frame)
+	Eigen::Matrix<float, 3, 3> R_wc2 = image2.CameraViewTransform.block<3, 3>(0, 0);	// camera2 orientation matrix (camera to world)
+	Eigen::Vector3f C2_w = image2.CameraViewTransform.block<3, 1>(0, 3);				// camera1 position in world frame (expressed in world frame)
 
-	Eigen::Matrix3d K1 = CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();					// camera1 calibration matrix 
-	Eigen::Matrix3d K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();			// camera2 calibration matrix 
+	Eigen::Matrix3f K1 = CameraProjectionTransform.block<3, 3>(0, 0);					// camera1 calibration matrix 
+	Eigen::Matrix3f K2 = image2.CameraProjectionTransform.block<3, 3>(0, 0);			// camera2 calibration matrix 
 																										// computing center point of patch (projection of vertex into image 1)
-	Eigen::Vector3d vertInImg1 = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
-	double u1 = vertInImg1(0) / vertInImg1(2);																// u-coordinates of vertex projected into image1 ...
-	double v1 = vertInImg1(1) / vertInImg1(2);																// v-coordinates of vertex projected into image1 ...
-	double pix_u1 = (u1 + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
-	double pix_v1 = (v1 + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
+	Eigen::Vector3f vertInImg1 = K1*R_wc1.transpose()*(vertex - C1_w);									// projecting vertex into image 1, step 1												
+	float u1 = vertInImg1(0) / vertInImg1(2);																// u-coordinates of vertex projected into image1 ...
+	float v1 = vertInImg1(1) / vertInImg1(2);																// v-coordinates of vertex projected into image1 ...
+	float pix_u1 = (u1 + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
+	float pix_v1 = (v1 + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
 
 																											// check if out-of-bounds (conservative - could do striclty less-than)
 	if (pix_u1 <= patch_size.width / 2 || pix_v1 <= patch_size.height / 2 ||
 		pix_u1 >= x_size - patch_size.width / 2 || pix_v1 >= y_size - patch_size.height / 2)
 		return 0;
 
-	Eigen::Vector3d vertInImg2 = K2*R_wc2.transpose()*(vertex - C2_w);									// projecting vertex into image 2, step 1												
-	double u2 = vertInImg2(0) / vertInImg2(2);															// u-coordinates of vertex projected into image2 ...
-	double v2 = vertInImg2(1) / vertInImg2(2);															// v-coordinates of vertex projected into image2 ...
-	double pix_u2 = (u2 + 1) / 2 * x_size;																// ... expressed in pixel coordinates
-	double pix_v2 = (v2 + 1) / 2 * y_size;																// ... expressed in pixel coordinates
+	Eigen::Vector3f vertInImg2 = K2*R_wc2.transpose()*(vertex - C2_w);									// projecting vertex into image 2, step 1												
+	float u2 = vertInImg2(0) / vertInImg2(2);															// u-coordinates of vertex projected into image2 ...
+	float v2 = vertInImg2(1) / vertInImg2(2);															// v-coordinates of vertex projected into image2 ...
+	float pix_u2 = (u2 + 1) / 2 * x_size;																// ... expressed in pixel coordinates
+	float pix_v2 = (v2 + 1) / 2 * y_size;																// ... expressed in pixel coordinates
 
 																										// check if out-of-bounds (conservative - could do striclty less-than)
 	if (pix_u2 <= patch_size.width / 2 || pix_v2 <= patch_size.height / 2 ||
@@ -333,22 +333,22 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
 	*/
-	return correlation.at<double>(0, 0);
+	return correlation.at<float>(0, 0);
 }
 
 
-double ImageRepresentation::getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3d normal, ImageRepresentation& image2) {
+float ImageRepresentation::getViewQuality(Eigen::Vector3f vertex, Eigen::Vector3f normal, ImageRepresentation& image2) {
 
-	Eigen::Vector3d VtoC1 = CameraViewTransform.block<3, 1>(0, 3).cast <double>() - vertex;						
-	Eigen::Vector3d VtoC2 = image2.CameraViewTransform.block<3, 1>(0, 3).cast <double>() - vertex;
+	Eigen::Vector3f VtoC1 = CameraViewTransform.block<3, 1>(0, 3) - vertex;						
+	Eigen::Vector3f VtoC2 = image2.CameraViewTransform.block<3, 1>(0, 3) - vertex;
 
 	
-	double cosAngle = double(VtoC1.normalized().dot(VtoC2.normalized()));
-	double angle = 4*acos(cosAngle);
+	float cosAngle = float(VtoC1.normalized().dot(VtoC2.normalized()));
+	float angle = 4*acos(cosAngle);
 
 	if (cosAngle <= 0) return 0;	
 
-	double weight = (-cos(angle) + 1) / 2;	//viewing angle 45° -> weight 1, viewing angle 0° or >=90° -> weight 0
+	float weight = (-cos(angle) + 1) / 2;	//viewing angle 45° -> weight 1, viewing angle 0° or >=90° -> weight 0
 
 	weight *= VtoC1.normalized().dot(normal)*VtoC2.normalized().dot(normal);
 

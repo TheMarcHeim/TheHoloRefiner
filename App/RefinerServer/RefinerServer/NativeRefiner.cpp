@@ -15,7 +15,7 @@ void NativeRefiner::reset()
 	std::cout << "Not implemented";
 }
 
-void NativeRefiner::addPicture(std::string path, Eigen::Matrix4d CameraViewTransform, Eigen::Matrix4d CameraProjectionTransform)
+void NativeRefiner::addPicture(std::string path, Eigen::Matrix4f CameraViewTransform, Eigen::Matrix4f CameraProjectionTransform)
 {
 	//add new image
 	images.push_back(
@@ -46,7 +46,7 @@ std::string NativeRefiner::refine(int nReps)
 		std::cout << "Adjusting vertices..." << std::endl;
 		nAdj = adjustVertices();
 		//model.subDivide();
-		std::cout << "Percentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
+		std::cout << "Percentage of adjusted vertices: " << ((float)nAdj) / ((float)model.nVert) << std::endl;
 		
 		// save intermediate refinement steps...
 		if (i < nReps - 1) {
@@ -69,18 +69,18 @@ int NativeRefiner::getNImages() {
 
 void NativeRefiner::testPrj() {
 
-	Eigen::Vector3d worldPoint(-2.8, 0.0, -1.4);
+	Eigen::Vector3f worldPoint(-2.8, 0.0, -1.4);
 	int thisView = 1;
 
-	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
-	Eigen::Matrix<double, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera orientation matrix (camera to world)	
-	Eigen::Matrix<double, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();
+	Eigen::Vector3f C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3);						// camera center in world frame
+	Eigen::Matrix<float, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0);			// camera orientation matrix (camera to world)	
+	Eigen::Matrix<float, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0);
 
-	Eigen::Vector3d vertInCam = R_wc.transpose()*(worldPoint - C_w);													// ... in camera frame
-	Eigen::Vector3d vertInImg = K*vertInCam;
+	Eigen::Vector3f vertInCam = R_wc.transpose()*(worldPoint - C_w);													// ... in camera frame
+	Eigen::Vector3f vertInImg = K*vertInCam;
 
-	Eigen::Vector2d rel(vertInImg(0) / vertInImg(2), vertInImg(1) / vertInImg(2));
-	Eigen::Vector2d pix((rel(0) + 1) / 2 * 2048 , (rel(1) + 1) / 2 * 1152);
+	Eigen::Vector2f rel(vertInImg(0) / vertInImg(2), vertInImg(1) / vertInImg(2));
+	Eigen::Vector2f pix((rel(0) + 1) / 2 * 2048 , (rel(1) + 1) / 2 * 1152);
 
 
 	std::cout << "relative img coords " << "\n" << rel << "\n";
@@ -115,23 +115,23 @@ int NativeRefiner::computeVisibility() {
 
 bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 
-	double threshold = 0.0;				// threshold for visibility
+	float threshold = 0.0;				// threshold for visibility
 	bool visible = false;
 	
-	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
-	Eigen::Matrix<double, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera orientation matrix (camera to world)	
-	Eigen::Matrix<double, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();
+	Eigen::Vector3f C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3);						// camera center in world frame
+	Eigen::Matrix<float, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0);			// camera orientation matrix (camera to world)	
+	Eigen::Matrix<float, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0);
 	
-	Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();		
-	Eigen::Vector3d N_w = model.VN.block<1, 3>(thisVertex, 0).transpose();
+	Eigen::Vector3f P_w = model.V.block<1, 3>(thisVertex, 0).transpose();		
+	Eigen::Vector3f N_w = model.VN.block<1, 3>(thisVertex, 0).transpose();
 	
 	
 	/*if (N_w(0) != N_w(0) || N_w(0) != N_w(0) || N_w(0) != N_w(0)) {
 		std::cout << "got some NANs here, index:" << thisVertex << std::endl;
 	}*/
 
-	Eigen::Vector3d vertInCam = R_wc.transpose()*(P_w - C_w);											// ... in camera frame
-	Eigen::Vector3d vertInImg = K*vertInCam;															// ... in image frame, homgeneous
+	Eigen::Vector3f vertInCam = R_wc.transpose()*(P_w - C_w);											// ... in camera frame
+	Eigen::Vector3f vertInImg = K*vertInCam;															// ... in image frame, homgeneous
 
 
 	// check if vertex is in front of camera
@@ -151,12 +151,12 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 	if (visible) {
 		//check if occluded
 		//positional vector
-		Eigen::Vector3d camToPos = P_w - C_w;
-		Eigen::Vector3d dir = camToPos.normalized();
-		double expDist = camToPos.norm(); 		//expected distance
+		Eigen::Vector3f camToPos = P_w - C_w;
+		Eigen::Vector3f dir = camToPos.normalized();
+		float expDist = camToPos.norm(); 		//expected distance
 		igl::Hit hit; //first hit
-		const double tolerance = 0.05;
-		bool hasHit = igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.V, model.F, hit);
+		const float tolerance = 0.05;
+		bool hasHit =  igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w.cast<double>(), dir.cast<double>(), model.V.cast<double>(), model.F, hit);
 		
 		//check distance
 		if (hasHit && hit.t < expDist - tolerance)
@@ -171,9 +171,10 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 // This function computes adjustment scores for just one given vertex
 void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int view2) {
 
-	Eigen::Vector3d p(0, 0, 0);
-	Eigen::Vector3d n(0, 0, 0);
-	Eigen::Vector3d p_current(0, 0, 0);
+	Eigen::Vector3f(0, 0, 0);
+	Eigen::Vector3f n(0, 0, 0);
+	Eigen::Vector3f p_current(0, 0, 0);
+	Eigen::Vector3f p(0, 0, 0);
 
 
 	p << model.V.block<1, 3>(vertex, 0).transpose();
@@ -181,7 +182,7 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	p_current = p - n*model.stepSize*model.nStepsDepthSearch/2; // start at negative position along normal
 
 
-	double weight =  images[view1].getViewQuality(p, n, images[view2]);
+	float weight =  images[view1].getViewQuality(p, n, images[view2]);
 	
 
 	model.nVertexObservations(vertex)+=weight; // needed for averaging
@@ -257,7 +258,7 @@ int NativeRefiner::adjustVertices() {
 	int nAdj = 0;
 	for (int v = 0; v < model.nVert; v++) { //loop through all vertices
 		int bestVertex = model.nStepsDepthSearch / 2;
-		double bestScore = model.adjustmentScores(bestVertex, v); //initial score
+		float bestScore = model.adjustmentScores(bestVertex, v); //initial score
 		for (int i = 0; i < model.nStepsDepthSearch; i++) {
 			if (model.adjustmentScores(i, v) > bestScore ) {//+ model.refineTolerance*pow(i - model.nStepsDepthSearch / 2, 2)
 				bestScore = model.adjustmentScores(i, v);
@@ -274,7 +275,7 @@ int NativeRefiner::adjustVertices() {
 		}
 	}
 	progressPrint(1, 1);
-	std::cout << "\nFinished adjusting Vertices.\nPercentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
+	std::cout << "\nFinished adjusting Vertices.\nPercentage of adjusted vertices: " << ((float)nAdj) / ((float)model.nVert) << std::endl;
 
 	// debatable if we should recompute normals here
 	model.computeNormals();
@@ -283,7 +284,7 @@ int NativeRefiner::adjustVertices() {
 
 void NativeRefiner::progressPrint(int n, int m) {
 	int barWidth = 70;
-	double progress = (((double)n) / ((double)m));
+	float progress = (((float)n) / ((float)m));
 	std::cout << "[";
 	int pos = barWidth * progress;
 	for (int i = 0; i < barWidth; ++i) {

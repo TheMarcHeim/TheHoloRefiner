@@ -32,26 +32,26 @@ void ModelRepresentation::subDivide()
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
-	nVertexObservations = Eigen::VectorXd::Zero(nVert);
-	adjustmentScores = Eigen::MatrixXd::Zero(nStepsDepthSearch, nVert);
+	nVertexObservations = Eigen::VectorXf::Zero(nVert);
+	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
 }
 
 bool ModelRepresentation::loadFile(std::string path)
 {
 	//we do it now with libigl
 
-	Eigen::MatrixXd tempV; 
+	Eigen::MatrixXf tempV; 
 	igl::readOBJ(path.c_str(), tempV, F);
 
-	Eigen::MatrixXd tempVh = Eigen::MatrixXd::Constant(tempV.cols()+1, tempV.rows(), 1.0);
+	Eigen::MatrixXf tempVh = Eigen::MatrixXf::Constant(tempV.cols()+1, tempV.rows(), 1.0);
 	tempVh.block(0,0,tempV.cols(), tempV.rows()) = tempV.transpose();
 	V = (modelToWorldTransform*tempVh).transpose().block(0, 0, tempV.rows(), 3);
 	
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
-	nVertexObservations = Eigen::VectorXd::Zero(nVert);
-	adjustmentScores = Eigen::MatrixXd::Zero(nStepsDepthSearch, nVert);
+	nVertexObservations = Eigen::VectorXf::Zero(nVert);
+	adjustmentScores = Eigen::MatrixXf::Zero(nStepsDepthSearch, nVert);
 	std::cout << "\n" << "Number of vertices: " << nVert << "\n";
 	std::cout << "\n" << "Number of triangles: " << nTriang << "\n";
 
@@ -70,7 +70,7 @@ void ModelRepresentation::computeNormals()
 	igl::per_vertex_normals(V, F, VN);		// calculates normals and feeds them into VN (rowwise)
 }
 
-bool ModelRepresentation::computeCenter(int verticeID, Eigen::Vector3d& midpoint)
+bool ModelRepresentation::computeCenter(int verticeID, Eigen::Vector3f& midpoint)
 {
 	std::set<int> vertices;
 	int insertCount = 0;
@@ -89,7 +89,7 @@ bool ModelRepresentation::computeCenter(int verticeID, Eigen::Vector3d& midpoint
 		}
 	}
 	if (insertCount != vertices.size() * 2) return false;
-	midpoint = Eigen::Vector3d::Zero();
+	midpoint = Eigen::Vector3f::Zero();
 	for (auto vid : vertices) {
 		midpoint += V.row(vid).transpose();
 	}

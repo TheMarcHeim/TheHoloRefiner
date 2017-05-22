@@ -15,7 +15,7 @@
 #include <Windows.h>
 
 
-void loadMats(Eigen::Matrix4d& f, Eigen::Matrix4d& s, std::string path) {
+void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
 
 	std::fstream file(path);
 	std::string line;
@@ -32,22 +32,22 @@ void loadMats(Eigen::Matrix4d& f, Eigen::Matrix4d& s, std::string path) {
 			i = 0;
 		}
 		else if (thisMat == 0) {
-			f(i, 0) = std::stod(line, &sz);
+			f(i, 0) = std::stof(line, &sz);
 			line2 = line.substr(sz);
-			f(i, 1) = std::stod(line2, &sz);
+			f(i, 1) = std::stof(line2, &sz);
 			line3 = line2.substr(sz);
-			f(i, 2) = std::stod(line3, &sz);
-			f(i, 3) = std::stod(line3.substr(sz));
+			f(i, 2) = std::stof(line3, &sz);
+			f(i, 3) = std::stof(line3.substr(sz));
 			i++;
 			sz = 0;
 		}
 		else {
-			s(i, 0) = std::stod(line, &sz);
+			s(i, 0) = std::stof(line, &sz);
 			line2 = line.substr(sz);
-			s(i, 1) = std::stod(line2, &sz);
+			s(i, 1) = std::stof(line2, &sz);
 			line3 = line2.substr(sz);
-			s(i, 2) = std::stod(line3, &sz);
-			s(i, 3) = std::stod(line3.substr(sz));
+			s(i, 2) = std::stof(line3, &sz);
+			s(i, 3) = std::stof(line3.substr(sz));
 			i++;
 			sz = 0;
 		}
@@ -64,8 +64,8 @@ int main()
 
 	std::string temp;
 	std::string path_with_prefix = path + "*.png";
-	Eigen::Matrix4d intrinsic;
-	Eigen::Matrix4d extrinsic;
+	Eigen::Matrix4f intrinsic;
+	Eigen::Matrix4f extrinsic;
 	int index = 0;
 	int maxNImg = 30;
 
