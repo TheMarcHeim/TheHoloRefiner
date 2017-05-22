@@ -58,16 +58,19 @@ void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
 int main()
 {
 	NativeRefiner refiner;
-	Eigen::Matrix4f intrinsic;
-	Eigen::Matrix4f extrinsic;
 	std::string path = "C:/SofaData/"; // path to dataset
 	std::string temp;
 	std::string path_with_prefix = path + "*.png";
+	Eigen::Matrix4f intrinsic;
+	Eigen::Matrix4f extrinsic;
 	int index = 0;
-	int maxNImg = 5;
+	int maxNImg = 30;
 
 	// loading model
-	refiner.addInitModel(path + "sofa.obj");
+	refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
+	//refiner.addInitModel(path + "sofa.obj");
+
+	
 
 	// load all pictures and matrices	
 		std::wstring search_path = std::wstring(path_with_prefix.begin(), path_with_prefix.end());
@@ -87,11 +90,19 @@ int main()
 			::FindClose(hFind);
 		}
 
-	
+		/*	
+	// adding picture 1
+	loadMats(extrinsic, intrinsic, path + "CapturedImage11.29642.png.matr");
+	refiner.addPicture(path + "CapturedImage11.29642.png", extrinsic, intrinsic);
+
+	// adding picture 2
+	loadMats(extrinsic, intrinsic, path + "CapturedImage20.98344.png.matr");
+	refiner.addPicture(path + "CapturedImage20.98344.png", extrinsic, intrinsic);*/
+
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
-	std::string out = refiner.refine(1);
+	std::string out = refiner.refine(2);
 	std::cout << "Finished Refinement \n";
 
 	// save refined

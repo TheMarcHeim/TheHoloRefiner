@@ -130,10 +130,13 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	double pix_v = (v + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
 
 	// check if out-of-bounds (conservative - could do striclty less-than)
-	if (pix_u <= patch_size.width / 2 || pix_v <= patch_size.height / 2 || 
-		pix_u >= x_size - patch_size.width / 2 || pix_v >= y_size - patch_size.height / 2)
+	
+	if (pix_u <= patch_size.width / 2 || pix_v <= patch_size.height / 2 ||
+		pix_u >= x_size - patch_size.width / 2 || pix_v >= y_size - patch_size.height / 2) {
 		return 0;
-
+	}
+	
+	
 	// computing corners of patch in image 1 (homogeneous coordinates)
 	cv::Point2d p1_c1(pix_u + patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower right corner
 	cv::Point2d p2_c1(pix_u - patch_size.width / 2, pix_v + patch_size.height / 2);						// patch in image 1, lower left corner
@@ -171,24 +174,27 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	// Nico's comment: I disagree... according to docs.opencv.org M should be 3x3. In the above link it is initialized as 2x4..?
 	// David's comment: ... it is initialized as 2x4 but then overwritten in line 20
 	//cv::Mat M = cv::Mat::zeros(img_c1.rows, img_c1.cols, img_c1.type());								// transformation matrix
+	
 	cv::Mat M = cv::Mat::zeros(3, 3, img_c1.type());
 	M = cv::getPerspectiveTransform(p_c2, p_c1);
 
 	// and apply perspective transform to "undistort" patch in image 2 by mapping it onto target frame
 	// yields patch2
 	cv::warpPerspective(img_c2, patch2, M, patch2.size());						// extracting and undistorting patch2 from img_c2
-
-
 	cv::Rect patch(p4_c1.x, p4_c1.y, patch_size.width, patch_size.height);		
+	
 	patch1 = cv::Mat(img_c1, patch);											// extracting patch 1 from img_c1	
 
-	
+
 	if (colorFlag == 0) {			//Grayscale
+
 		cv::Mat correlation;
-		cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
+		cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR);
+
 		return correlation.at<float>(0, 0);
 	}
 	else {							//BRG
+
 		cv::Mat correlation[3];
 
 		cv::split(patch1, patch1BRG);
@@ -227,5 +233,25 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	*/
 	
 
+
+}
+
+float ImageRepresentation::getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3d normal, ImageRepresentation& image2) {
+
+	Eigen::Vector3d VtoC1 = CameraViewTransform.block<3, 1>(0, 3).cast <double>() - vertex;						
+	Eigen::Vector3d VtoC2 = image2.CameraViewTransform.block<3, 1>(0, 3).cast <double>() - vertex;
+
+	
+	float cosAngle = float(VtoC1.normalized().dot(VtoC2.normalized()));
+	float angle = 4*acos(cosAngle);
+
+	if (cosAngle <= 0) return 0;	
+
+	float weight = (-cos(angle) + 1) / 2;	//viewing angle 45° -> weight 1, viewing angle 0° or >=90° -> weight 0
+
+	weight *= VtoC1.normalized().dot(normal)*VtoC2.normalized().dot(normal);
+
+	return weight;
+	
 
 }

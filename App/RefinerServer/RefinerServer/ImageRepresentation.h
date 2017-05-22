@@ -28,6 +28,8 @@
 		/// </summary>
 		float computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, int colorFlag);
 		
+		float getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3d normal, ImageRepresentation& image2);
+
 		const std::string filename;
 		std::vector<unsigned char> image;
 		cv::Mat ocvImage;
