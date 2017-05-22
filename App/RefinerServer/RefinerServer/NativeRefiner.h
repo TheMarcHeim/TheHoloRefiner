@@ -39,8 +39,8 @@
 		/// the following can be acquired from the SDK
 		/// </summary>
 		void addPicture(std::string path,//file path to images
-			Eigen::Matrix4f CameraViewTransform,//Stores the camera's extrinsic transform in the coordinate system
-			Eigen::Matrix4f  CameraProjectionTransform);//Stores the camera's projection transform
+			Eigen::Matrix4d CameraViewTransform,//Stores the camera's extrinsic transform in the coordinate system
+			Eigen::Matrix4d  CameraProjectionTransform);//Stores the camera's projection transform
 
 		/// <summary>
 		/// add initial model in specified file format---> https://github.com/TheMarcHeim/TheHoloRefiner/wiki/Mesh-file-format

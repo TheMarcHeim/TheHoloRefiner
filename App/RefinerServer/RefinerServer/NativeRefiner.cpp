@@ -15,7 +15,7 @@ void NativeRefiner::reset()
 	std::cout << "Not implemented";
 }
 
-void NativeRefiner::addPicture(std::string path, Eigen::Matrix4f CameraViewTransform, Eigen::Matrix4f CameraProjectionTransform)
+void NativeRefiner::addPicture(std::string path, Eigen::Matrix4d CameraViewTransform, Eigen::Matrix4d CameraProjectionTransform)
 {
 	//add new image
 	images.push_back(
@@ -181,7 +181,7 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	p_current = p - n*model.stepSize*model.nStepsDepthSearch/2; // start at negative position along normal
 
 
-	float weight =  images[view1].getViewQuality(p, n, images[view2]);
+	double weight =  images[view1].getViewQuality(p, n, images[view2]);
 	
 
 	model.nVertexObservations(vertex)+=weight; // needed for averaging
@@ -194,14 +194,16 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
 		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		
-		
+		if (model.nVertexObservations(vertex) > 0.000001) {
+			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
+		}
 
 		if (model.adjustmentScores(i, vertex) != model.adjustmentScores(i, vertex)) {
 			std::cout << "nan" << std::endl;
 		}
 	} 
 	std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
-
+	
 }
 
 // This function computes adjustment scores for all vertices and pairs
@@ -255,7 +257,7 @@ int NativeRefiner::adjustVertices() {
 	int nAdj = 0;
 	for (int v = 0; v < model.nVert; v++) { //loop through all vertices
 		int bestVertex = model.nStepsDepthSearch / 2;
-		float bestScore = model.adjustmentScores(bestVertex, v); //initial score
+		double bestScore = model.adjustmentScores(bestVertex, v); //initial score
 		for (int i = 0; i < model.nStepsDepthSearch; i++) {
 			if (model.adjustmentScores(i, v) > bestScore ) {//+ model.refineTolerance*pow(i - model.nStepsDepthSearch / 2, 2)
 				bestScore = model.adjustmentScores(i, v);
@@ -281,7 +283,7 @@ int NativeRefiner::adjustVertices() {
 
 void NativeRefiner::progressPrint(int n, int m) {
 	int barWidth = 70;
-	float progress = (((float)n) / ((float)m));
+	double progress = (((double)n) / ((double)m));
 	std::cout << "[";
 	int pos = barWidth * progress;
 	for (int i = 0; i < barWidth; ++i) {

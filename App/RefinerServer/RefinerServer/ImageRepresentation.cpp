@@ -5,9 +5,8 @@
 
 
 ImageRepresentation::ImageRepresentation(std::string filename,
-	Eigen::Matrix4f pCameraViewTransform,
-	Eigen::Matrix4f pCameraProjectionTransform)
-	:filename(filename){
+	Eigen::Matrix4d pCameraViewTransform,
+	Eigen::Matrix4d pCameraProjectionTransform) {
 	
 	//load PNG
 	std::vector<unsigned char> png;
@@ -63,9 +62,9 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 								 pCameraProjectionTransform.m31, pCameraProjectionTransform.m32, -pCameraProjectionTransform.m33, pCameraProjectionTransform.m34,
 								 pCameraProjectionTransform.m41, pCameraProjectionTransform.m42, -pCameraProjectionTransform.m43, pCameraProjectionTransform.m44;*/
 	
-	Eigen::Vector4f diag;
+	Eigen::Vector4d diag;
 	diag << 1, 1, -1, -1;
-	Eigen::Matrix4f diagM = diag.asDiagonal();
+	Eigen::Matrix4d diagM = diag.asDiagonal();
 	CameraProjectionTransform = pCameraProjectionTransform*diagM;
 	
 }
@@ -94,8 +93,9 @@ Eigen::Vector3d ImageRepresentation::project2dto3d(Eigen::Vector3d surface_norma
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
-float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, int colorFlag) {
+double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, int colorFlag) {
 
+	
 	// Nomencalture: 
 	// hpoint:	homogenous 2D image plane point (->3D)
 	// hPoint:	homgeneous 3D worl frame point (->4D)
@@ -205,11 +205,12 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	patch1 = cv::Mat(img_c1, patch);											// extracting patch 1 from img_c1	
 
 	double correlation = 0;
+	
 	if (colorFlag == 0) {			//Grayscale
 		cv::Mat correlationMat;
 		cv::matchTemplate(patch1, patch2, correlationMat, cv::TemplateMatchModes::TM_SQDIFF);
 
-		correlation = correlationMat.at<float>(0, 0);
+		correlation = correlationMat.at<double>(0, 0);
 		std::cout << "corr:" << correlation << std::endl;
 	}
 	else {							//BRG
@@ -223,7 +224,7 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
 		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
 
-		correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
+		correlation = (correlationMat[0].at<double>(0, 0) + correlationMat[1].at<double>(0, 0) + correlationMat [2].at<double>(0, 0)) / 3.0;
 	}
 	// display images and patches, print stuff
 	
@@ -253,11 +254,11 @@ float ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation&
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);*/
 
-	return correlation;
+	return 1;// correlation;
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (without projective unwarping - roughly 2x faster)
-float ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size) {
+double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size) {
 	// Nomencalture: 
 	// hpoint:	homogenous 2D image plane point (->3D)
 	// hPoint:	homgeneous 3D worl frame point (->4D)
@@ -317,7 +318,7 @@ float ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2, 
 	/*
 	cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
-	std::cout << "Correlation is: " << correlation.at<float>(0, 0) << std::endl;
+	std::cout << "Correlation is: " << correlation.at<double>(0, 0) << std::endl;
 	cv::namedWindow("img1", cv::WINDOW_NORMAL);
 	cv::namedWindow("img2", cv::WINDOW_NORMAL);
 	cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
@@ -332,23 +333,22 @@ float ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2, 
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
 	*/
-	return correlation.at<float>(0, 0);
+	return correlation.at<double>(0, 0);
 }
 
-	
 
-float ImageRepresentation::getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3d normal, ImageRepresentation& image2) {
+double ImageRepresentation::getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3d normal, ImageRepresentation& image2) {
 
 	Eigen::Vector3d VtoC1 = CameraViewTransform.block<3, 1>(0, 3).cast <double>() - vertex;						
 	Eigen::Vector3d VtoC2 = image2.CameraViewTransform.block<3, 1>(0, 3).cast <double>() - vertex;
 
 	
-	float cosAngle = float(VtoC1.normalized().dot(VtoC2.normalized()));
-	float angle = 4*acos(cosAngle);
+	double cosAngle = double(VtoC1.normalized().dot(VtoC2.normalized()));
+	double angle = 4*acos(cosAngle);
 
 	if (cosAngle <= 0) return 0;	
 
-	float weight = (-cos(angle) + 1) / 2;	//viewing angle 45° -> weight 1, viewing angle 0° or >=90° -> weight 0
+	double weight = (-cos(angle) + 1) / 2;	//viewing angle 45° -> weight 1, viewing angle 0° or >=90° -> weight 0
 
 	weight *= VtoC1.normalized().dot(normal)*VtoC2.normalized().dot(normal);
 
