@@ -37,6 +37,7 @@ std::string NativeRefiner::refine(int nReps)
 {
 
 	int nAdj;
+	model.subDivide();
 
 	for(int i=0; i<nReps; i++){
 		std::cout << "Computing visibility..." << std::endl;
@@ -45,7 +46,7 @@ std::string NativeRefiner::refine(int nReps)
 		computeAdjustmentScores();
 		std::cout << "Adjusting vertices..." << std::endl;
 		nAdj = adjustVertices();
-		//model.subDivide();
+		
 		std::cout << "Percentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
 		
 		// save intermediate refinement steps...
@@ -198,9 +199,9 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 		}
 
-		if (model.adjustmentScores(i, vertex) != model.adjustmentScores(i, vertex)) {
-			std::cout << "nan" << std::endl;
-		}
+		//if (model.adjustmentScores(i, vertex) != model.adjustmentScores(i, vertex)) {
+		//	std::cout << "nan" << std::endl;
+		//}
 	} 
 	std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
 	

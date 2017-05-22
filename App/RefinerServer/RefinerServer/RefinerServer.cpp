@@ -67,7 +67,7 @@ int main()
 	Eigen::Matrix4d intrinsic;
 	Eigen::Matrix4d extrinsic;
 	int index = 0;
-	int maxNImg = 30;
+	int maxNImg = 5;
 
 	// loading model
 

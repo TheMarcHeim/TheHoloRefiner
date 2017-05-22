@@ -204,14 +204,13 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	
 	patch1 = cv::Mat(img_c1, patch);											// extracting patch 1 from img_c1	
 
-	double correlation = 0;
+	float correlation = 0;
 	
 	if (colorFlag == 0) {			//Grayscale
 		cv::Mat correlationMat;
-		cv::matchTemplate(patch1, patch2, correlationMat, cv::TemplateMatchModes::TM_SQDIFF);
+		cv::matchTemplate(patch1, patch2, correlationMat, cv::TemplateMatchModes::TM_CCORR_NORMED);
+		correlation = correlationMat.at<float>(0, 0);
 
-		correlation = correlationMat.at<double>(0, 0);
-		std::cout << "corr:" << correlation << std::endl;
 	}
 	else {							//BRG
 
@@ -224,13 +223,13 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
 		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
 
-		correlation = (correlationMat[0].at<double>(0, 0) + correlationMat[1].at<double>(0, 0) + correlationMat [2].at<double>(0, 0)) / 3.0;
+		correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
 	}
 	// display images and patches, print stuff
 	
 	cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
-	std::cout << "M is \n " << M << std::endl;
+	//std::cout << "M is \n " << M << std::endl;
 	std::cout << "Correlation is: " << correlation << std::endl;
 	cv::namedWindow("img1", cv::WINDOW_NORMAL);
 	cv::namedWindow("img2", cv::WINDOW_NORMAL);
@@ -254,7 +253,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
 
-	return 1;// correlation;
+	return (double)correlation;
 }
 
 //Compute corrsponding patch in camera 2 given the patch in camera 1 (without projective unwarping - roughly 2x faster)
