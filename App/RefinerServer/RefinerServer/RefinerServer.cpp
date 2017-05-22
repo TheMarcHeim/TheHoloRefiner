@@ -16,12 +16,14 @@
 
 
 void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
+
 	std::fstream file(path);
 	std::string line;
 	std::string line2;
 	std::string line3;
 	size_t pos = 0;
 	std::string::size_type sz;     // alias of size_t
+	
 	int thisMat = 0;
 	int i = 0;
 	while (getline(file, line)) {
@@ -56,16 +58,26 @@ void loadMats(Eigen::Matrix4f& f, Eigen::Matrix4f& s, std::string path) {
 int main()
 {
 	NativeRefiner refiner;
+
 	Eigen::Matrix4f intrinsic;
 	Eigen::Matrix4f extrinsic;
 	//std::string path = "C:/SofaData/"; // path to dataset
 	std::string path = "C:/HappyBirthday/";
+
 	std::string temp;
 	std::string path_with_prefix = path + "*.png";
+	Eigen::Matrix4f intrinsic;
+	Eigen::Matrix4f extrinsic;
+	int index = 0;
+	int maxNImg = 30;
 
 	// loading model
+
 	//refiner.addInitModel(path + "sofa.obj");
 	refiner.addInitModel(path + "spatialMap_part.obj");
+	//refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
+	//refiner.addInitModel(path + "sofa.obj");
+
 
 	// load all pictures and matrices	
 		std::wstring search_path = std::wstring(path_with_prefix.begin(), path_with_prefix.end());
@@ -78,27 +90,30 @@ int main()
 					temp = std::string(ws.begin(), ws.end());
 					loadMats(extrinsic, intrinsic, path+ temp + ".matr");
 					refiner.addPicture(path + temp, extrinsic, intrinsic);
+
 					std::cout << "loaded picture and matrix for " << temp << " \n";
+					index++;
 				}
-			} while (::FindNextFile(hFind, &fd));
+			} while (::FindNextFile(hFind, &fd) && index<maxNImg);
 			::FindClose(hFind);
 		}
+
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
-
 	// refine
-	std::string out = refiner.refine(1);
+	std::string out = refiner.refine(2);
 	std::cout << "Finished Refinement \n";
 
-	//  save refined
+	// save refined
 	refiner.saveRefinedModel(path + "sofa_refined.obj");
 	std::cout << "Saved refined model\n";
 
 	// Done. Now loop forever to keep terminal from closing
 	std::cout << "done\n";
-	while (1) { 
 
-	}
+	do {
+		std::cout << '\n' << "Press a key to quit...";
+	} while (std::cin.get() != '\n');
 
     return 0;
 }

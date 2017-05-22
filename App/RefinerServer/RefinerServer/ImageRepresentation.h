@@ -26,13 +26,19 @@
 		/// <summary>
 		/// Compute corrsponding patch in camera 2 given the patch in camera 1 (via reprojection and projective unwarping)
 		/// </summary>
-		float computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
+		float computeDistortedPatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size, int colorFlag);
 		
+
 		/// <summary>
 		/// Compute corrsponding patch in camera 2 given the patch in camera 1 (without unwarping)
 		/// </summary>
 		float computePatchCorrelation(ImageRepresentation& image2, Eigen::Vector3d surface_normal, Eigen::Vector3d vertex, cv::Size patch_size);
 
+
+		/// <summary>
+		/// Compute view quality
+		/// </summary>
+		float getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3d normal, ImageRepresentation& image2);
 
 
 		const std::string filename;

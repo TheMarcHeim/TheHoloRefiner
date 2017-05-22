@@ -115,9 +115,9 @@ struct CommaInitializer
     */
   EIGEN_DEVICE_FUNC
   inline XprType& finished() {
-      eigen_assert(((m_row+m_currentBlockRows) == m_xpr.rows() || m_xpr.cols() == 0)
+      /*eigen_assert(((m_row+m_currentBlockRows) == m_xpr.rows() || m_xpr.cols() == 0)
            && m_col == m_xpr.cols()
-           && "Too few coefficients passed to comma initializer (operator<<)");
+           && "Too few coefficients passed to comma initializer (operator<<)");*/
       return m_xpr;
   }
 
