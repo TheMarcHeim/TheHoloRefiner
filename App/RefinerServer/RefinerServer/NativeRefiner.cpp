@@ -211,7 +211,7 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 int NativeRefiner::computeAdjustmentScores() {
 	// loop through all vertices and images, find pairs and compute 
 
-	model.adjustmentScores = Eigen::MatrixXf::Zero(model.nStepsDepthSearch, model.nVert);
+	model.adjustmentScores = Eigen::MatrixXd::Zero(model.nStepsDepthSearch, model.nVert);
 	//TODO model.nVertexObservations = 0
 
 	for (int v = 0; v < model.nVert; v++) {
