@@ -219,14 +219,10 @@ int NativeRefiner::computeAdjustmentScores() {
 		// regularization of mesh
 		Eigen::Vector3d midPoint;
 		bool isInside = model.computeCenter(v, midPoint);
-
-
 		Eigen::Vector3d p = model.V.row(v).transpose();
 		Eigen::Vector3d n = model.VN.row(v).transpose();
-		Eigen::Vector3d p_current = p - n*model.stepSize*model.nStepsDepthSearch / 2;
+		Eigen::Vector3d p_current = p - n*params.stepSize*params.nStepsDepthSearch / 2;
 		Eigen::Vector3d dtmp = midPoint - p;
-
-		
 		//std::cout << "Dist for Vertex " << v << ": "<< dtmp.norm()<< std::endl;	//stimmt noch nicht... bis zu 12 m Abstand vertex zu Schwerpunkt von vertex nachbarn...
 
 		for (int i = 0; i < params.nStepsDepthSearch; i++) {
