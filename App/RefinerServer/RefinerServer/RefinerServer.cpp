@@ -72,9 +72,12 @@ int main()
 	// loading model
 
 	//refiner.addInitModel(path + "sofa.obj");
-	refiner.addInitModel(path + "spatialMap_part.obj");
 	//refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
-	//refiner.addInitModel(path + "sofa.obj");
+
+	//refiner.addInitModel(path + "spatialMap_part.obj");
+	refiner.addInitModel(path + "Kiste_GroundTruth_Pos.obj");
+
+
 
 
 	// load all pictures and matrices	
@@ -99,7 +102,7 @@ int main()
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
-	std::string out = refiner.refine(1);
+	std::string out = refiner.refine(2);
 	std::cout << "Finished Refinement \n";
 
 	// save refined

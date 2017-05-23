@@ -7,8 +7,9 @@ ModelRepresentation::ModelRepresentation()
 {
 
 	nStepsDepthSearch = 51;
-	stepSize = 0.005; 
-	refineTolerance = 0.000; // only adjust vertex if new one is this much better
+	//nStepsDepthSearch = 21;
+	stepSize = 0.001; 
+	refineTolerance = 0.00001; // only adjust vertex if new one is this much better
 	
 	/*modelToWorldTransform << 0, 0, 1, 0.02,
 							 1, 0, 0, 0.19,
@@ -16,9 +17,15 @@ ModelRepresentation::ModelRepresentation()
 							 0, 0, 0, 1; // sofa dataset*/
 
 	// happy birthday dataset capture 1
-	modelToWorldTransform << -1, 0, 0, -1.2379,
+	/*modelToWorldTransform << -1, 0, 0, -1.2379,
 							  0, 0, 1, 1.3061,
 							  0, 1, 0, -0.02,
+							  0, 0, 0, 1;*/
+
+	// happy birthday ground truth
+	modelToWorldTransform << -1, 0, 0, -1.2379,
+							  0, 0, 1, 1.2861,
+							  0, 1, 0, -0.06,
 							  0, 0, 0, 1;
 }
 

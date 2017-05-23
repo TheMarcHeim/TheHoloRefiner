@@ -16,8 +16,8 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 	if (!error) error = lodepng::decode(image, width, height, png);	//needed?
 
 	//prepare openCV buffers
-	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
-	//ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_COLOR);			//BRG
+	//ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
+	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_COLOR);			//BRG
 	x_size = ocvImage.cols;
 	y_size = ocvImage.rows; // really needed if we have width and height? (l. 12)
 
@@ -109,9 +109,8 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	cv::Mat img_c2 = image2.ocvImage;
 	cv::Mat patch1 = cv::Mat::zeros(patch_size,  img_c1.type());
 	cv::Mat patch2 = cv::Mat::zeros(patch_size, img_c1.type());
-	cv::Mat patch1BRG[3];
-	cv::Mat patch2BRG[3];
-
+	std::vector<cv::Mat> patch1BRG;
+	std::vector<cv::Mat> patch2BRG;
 
 	// get ex- & intrinsics of camera
 	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
@@ -163,22 +162,6 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * x_size, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * y_size);
 	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * x_size, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * y_size);
 
-	////////test
-	/*
-	// computing center point of patch2 (projection of vertex into image 2)
-	Eigen::Vector3d vertInImg2 = K2*R_wc2.transpose()*(vertex - C2_w);									// projecting vertex into image 1, step 1												
-	double u2 = vertInImg2(0) / vertInImg2(2);																// u-coordinates of vertex projected into image1 ...
-	double v2 = vertInImg2(1) / vertInImg2(2);																// v-coordinates of vertex projected into image1 ...
-	double pix_u2 = (u2 + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
-	double pix_v2 = (v2 + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
-	// computing corners of patch in image 2 (homogeneous coordinates)
-	cv::Point2d p1_c2(pix_u2 + patch_size.width / 2, pix_v2 + patch_size.height / 2);						// patch in image 1, lower right corner
-	cv::Point2d p2_c2(pix_u2 - patch_size.width / 2, pix_v2 + patch_size.height / 2);						// patch in image 1, lower left corner
-	cv::Point2d p3_c2(pix_u2 + patch_size.width / 2, pix_v2 - patch_size.height / 2);						// patch in image 1, upper right corner
-	cv::Point2d p4_c2(pix_u2 - patch_size.width / 2, pix_v2 - patch_size.height / 2);						// patch in image 1, upper left corner
-	patch2 = cv::Mat(img_c2, cv::Rect(p4_c2.x, p4_c2.y, patch_size.width, patch_size.height));
-	*/
-
 	// check if second patch runs out of frame
 	for (int i = 0; i < 4; i++) {
 		if (p_c2[i].x <= patch_size.width / 2 || p_c2[i].y <= patch_size.height / 2 ||
@@ -223,11 +206,20 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
 		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
 
-		correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
+		//V1: Mean
+		//correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
+		
+		//V2: Multiply
+		correlation = (correlationMat[0].at<float>(0, 0) * correlationMat[1].at<float>(0, 0) * correlationMat[2].at<float>(0, 0));
+
+		//std::cout << "blueCorr: " << correlationMat[0].at<float>(0, 0) << std::endl;
+		//std::cout << "redCorr: " << correlationMat[1].at<float>(0, 0) << std::endl;
+		//std::cout << "greenCorr: " << correlationMat[2].at<float>(0, 0) << std::endl;
 	}
 	// display images and patches, print stuff
-	
-	/*cv::Mat left = img_c1.clone();
+	/*
+	int channel = 2;
+	cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	//std::cout << "M is \n " << M << std::endl;
 	std::cout << "Correlation is: " << correlation << std::endl;
@@ -245,13 +237,25 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
 	int npts = cv::Mat(contour).rows;
 	polylines(right, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
+	
 	cv::resize(patch1, patch1, cv::Size(150,150));
 	cv::resize(patch2, patch2, cv::Size(150,150));
+	
+	cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
+	cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
+	
 	cv::imshow("img2", right);
 	cv::imshow("img1", left);
-	cv::imshow("patch1", patch1);
-	cv::imshow("patch2", patch2);
-	cv::waitKey(1);*/
+
+	// Show rgb image
+	//cv::imshow("patch1", patch1);
+	//cv::imshow("patch2", patch2);
+
+	//Show specific channel
+	cv::imshow("patch1", patch1BRG[channel]);
+	cv::imshow("patch2", patch2BRG[channel]);
+	cv::waitKey(1);
+	*/
 
 	return (double)correlation;
 }
@@ -314,8 +318,8 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
 
 	// display images and patches, print stuff
-	/*
-	cv::Mat left = img_c1.clone();
+	
+	/*cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	std::cout << "Correlation is: " << correlation.at<double>(0, 0) << std::endl;
 	cv::namedWindow("img1", cv::WINDOW_NORMAL);
@@ -330,8 +334,8 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(1);
-	*/
+	cv::waitKey(1);*/
+	
 	return correlation.at<double>(0, 0);
 }
 

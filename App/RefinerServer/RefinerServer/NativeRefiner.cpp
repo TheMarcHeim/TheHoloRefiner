@@ -7,7 +7,7 @@
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(9,9); // to be experimented with - later implement in a parameter file preferably
+	patch_size = cv::Size(25,25); // to be experimented with - later implement in a parameter file preferably
 }
 
 void NativeRefiner::reset()
@@ -117,7 +117,7 @@ int NativeRefiner::computeVisibility() {
 
 bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 
-	double threshold = 0.0;				// threshold for visibility
+	double threshold = 0.4;				// threshold for visibility
 	bool visible = false;
 	
 	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
@@ -193,7 +193,7 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 
 		p_current += model.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
-		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
+		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 1);		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		
 		if (model.nVertexObservations(vertex) > 0.00001) {
 			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
@@ -225,7 +225,7 @@ int NativeRefiner::computeAdjustmentScores() {
 		}
 
 		// regularization of mesh
-		const double lambda = 1;
+		const double lambda = 0;
 		Eigen::Vector3d midPoint;
 
 		bool isInside = model.computeCenter(v, midPoint);
@@ -256,7 +256,6 @@ int NativeRefiner::computeAdjustmentScores() {
 	std::cout << "\nfinished computing adjustmentScores." << std::endl;		
 	return 0;
 }
-
 
 int NativeRefiner::adjustVertices() {
 
