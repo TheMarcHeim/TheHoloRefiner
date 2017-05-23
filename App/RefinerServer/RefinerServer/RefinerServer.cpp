@@ -59,21 +59,21 @@ int main()
 {
 	NativeRefiner refiner;
 
-	std::string path = "C:/SofaData/"; // path to dataset
-	//std::string path = "C:/HappyBirthday/";
+	//std::string path = "C:/SofaData/"; // path to dataset
+	std::string path = "C:/HappyBirthday/";
 
 	std::string temp;
 	std::string path_with_prefix = path + "*.png";
 	Eigen::Matrix4d intrinsic;
 	Eigen::Matrix4d extrinsic;
 	int index = 0;
-	int maxNImg = 8;
+	int maxNImg = 30;
 
 	// loading model
 
 	//refiner.addInitModel(path + "sofa.obj");
-	//refiner.addInitModel(path + "spatialMap_part.obj");
-	refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
+	refiner.addInitModel(path + "spatialMap_part.obj");
+	//refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
 	//refiner.addInitModel(path + "sofa.obj");
 
 
@@ -99,7 +99,7 @@ int main()
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
-	std::string out = refiner.refine(2);
+	std::string out = refiner.refine(1);
 	std::cout << "Finished Refinement \n";
 
 	// save refined

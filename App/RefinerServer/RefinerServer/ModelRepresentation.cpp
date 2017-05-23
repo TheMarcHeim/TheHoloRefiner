@@ -10,16 +10,16 @@ ModelRepresentation::ModelRepresentation()
 	stepSize = 0.005; 
 	refineTolerance = 0.000; // only adjust vertex if new one is this much better
 	
-	modelToWorldTransform << 0, 0, 1, 0.02,
+	/*modelToWorldTransform << 0, 0, 1, 0.02,
 							 1, 0, 0, 0.19,
 							 0, 1, 0, -0.06,
-							 0, 0, 0, 1; // sofa dataset
+							 0, 0, 0, 1; // sofa dataset*/
 
 	// happy birthday dataset capture 1
-	/*modelToWorldTransform << -1, 0, 0, -1.2379,
+	modelToWorldTransform << -1, 0, 0, -1.2379,
 							  0, 0, 1, 1.3061,
 							  0, 1, 0, -0.02,
-								  0, 0, 0, 1;*/
+							  0, 0, 0, 1;
 }
 
 ModelRepresentation::~ModelRepresentation()
@@ -28,12 +28,13 @@ ModelRepresentation::~ModelRepresentation()
 
 void ModelRepresentation::subDivide()
 {
-	igl::upsample(V, F, 2);
+	igl::upsample(V, F, 1);
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
 	nVertexObservations = Eigen::VectorXd::Zero(nVert);
 	adjustmentScores = Eigen::MatrixXd::Zero(nStepsDepthSearch, nVert);
+	std::cout << "Subdivided..." << std::endl;
 }
 
 bool ModelRepresentation::loadFile(std::string path)
