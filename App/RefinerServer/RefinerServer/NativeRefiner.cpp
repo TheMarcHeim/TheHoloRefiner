@@ -252,7 +252,7 @@ int NativeRefiner::adjustVertices() {
 		int bestVertex = params.nStepsDepthSearch / 2;
 		double bestScore = model.adjustmentScores(bestVertex, v); //initial score
 		for (int i = 0; i < params.nStepsDepthSearch; i++) {
-			if (model.adjustmentScores(i, v) > bestScore ) {//+ model.refineTolerance*pow(i - model.nStepsDepthSearch / 2, 2)
+			if (model.adjustmentScores(i, v) > bestScore ) {
 				bestScore = model.adjustmentScores(i, v);
 				bestVertex = i;
 			}
