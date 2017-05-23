@@ -189,13 +189,12 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 
 
 	for (int i = 0; i < model.nStepsDepthSearch; i++) {
+
 		p_current += model.stepSize*n;
-		//std::cout <<"match: "<< images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0)<<std::endl;
-		//std::cout << "regularization: " << -(isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
 		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		
-		if (model.nVertexObservations(vertex) > 0.000001) {
+		if (model.nVertexObservations(vertex) > 0.00001) {
 			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 		}
 
@@ -203,14 +202,13 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 		//	std::cout << "nan" << std::endl;
 		//}
 	} 
-	std::cout << "Adjustment scores for Vertex " << vertex << " are \n" << model.adjustmentScores.block<21, 1>(0, vertex) << std::endl << std::endl;
-	
 }
 
 // This function computes adjustment scores for all vertices and pairs
 int NativeRefiner::computeAdjustmentScores() {
 	// loop through all vertices and images, find pairs and compute 
 
+	///////////////// TODO //////////
 	model.adjustmentScores = Eigen::MatrixXd::Zero(model.nStepsDepthSearch, model.nVert);
 	//TODO model.nVertexObservations = 0
 
@@ -227,26 +225,34 @@ int NativeRefiner::computeAdjustmentScores() {
 		}
 
 		// regularization of mesh
-		//const double lambda = 100000;
-		/*const double lambda = 0;
+		const double lambda = 0.01;
 		Eigen::Vector3d midPoint;
+
 		bool isInside = model.computeCenter(v, midPoint);
+
 		Eigen::Vector3d p(model.V(v, 2), model.V(v, 0), model.V(v, 1));
 		Eigen::Vector3d n(model.VN(v, 2), model.VN(v, 0), model.VN(v, 1));
 		Eigen::Vector3d p_current = p - n*model.stepSize*model.nStepsDepthSearch / 2;
 		Eigen::Vector3d dtmp = midPoint - p_current;
 		
+		//std::cout << "Dist for Vertex" << dtmp.norm()<< std::endl;	//stimmt noch nicht... bis zu 12 m Abstand vertex zu Schwerpunkt von vertex nachbarn...
+
 		for (int i = 0; i < model.nStepsDepthSearch; i++) {
 			p_current += model.stepSize*n;
 			dtmp = midPoint - p_current;
 			model.adjustmentScores(i, v) += (isInside ? dtmp.squaredNorm()*lambda : 0);
-		}*/
+			//std::cout << (isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
+		}
+
+		
+		//std::cout << "Adjustment scores for Vertex " << v << " are \n" << model.adjustmentScores.block<51, 1>(0, v) << std::endl << std::endl;
 
 		// print progress
-		//if (v % 10 == 0) {
+		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
-		//}
+		}
 	}
+
 	progressPrint(1, 1);
 	std::cout << "\nfinished computing adjustmentScores." << std::endl;		
 	return 0;

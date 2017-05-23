@@ -227,7 +227,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	}
 	// display images and patches, print stuff
 	
-	cv::Mat left = img_c1.clone();
+	/*cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	//std::cout << "M is \n " << M << std::endl;
 	std::cout << "Correlation is: " << correlation << std::endl;
@@ -251,7 +251,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(1);
+	cv::waitKey(1);*/
 
 	return (double)correlation;
 }
@@ -351,9 +351,9 @@ double ImageRepresentation::getViewQuality(Eigen::Vector3d vertex, Eigen::Vector
 
 	weight *= VtoC1.normalized().dot(normal)*VtoC2.normalized().dot(normal);
 
-	if (abs(weight) < 0.00001) {
+	/*if (abs(weight) < 0.00001) {
 		std::cout << "weight = 0" << std::endl;
-	}
+	}*/
 
 	return weight;
 	

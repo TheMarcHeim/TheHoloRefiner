@@ -88,7 +88,9 @@ bool ModelRepresentation::computeCenter(int verticeID, Eigen::Vector3d& midpoint
 			}
 		}
 	}
+	
 	if (insertCount != vertices.size() * 2) return false;
+	
 	midpoint = Eigen::Vector3d::Zero();
 	for (auto vid : vertices) {
 		midpoint += V.row(vid).transpose();
