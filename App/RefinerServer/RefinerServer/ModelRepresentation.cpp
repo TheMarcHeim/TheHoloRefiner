@@ -7,17 +7,28 @@ ModelRepresentation::ModelRepresentation()
 {
 
 	loadParams("params.txt", params);
+
 	
-	//modelToWorldTransform << 0, 0, 1, 0.02,
-	//						 1, 0, 0, 0.19,
-	//						 0, 1, 0, -0.06,
-	//						 0, 0, 0, 1; // sofa dataset
+	/*modelToWorldTransform << 0, 0, 1, 0.02,
+							 1, 0, 0, 0.19,
+							 0, 1, 0, -0.06,
+							 0, 0, 0, 1; // sofa dataset*/
+
 
 	// happy birthday dataset capture 1
 	modelToWorldTransform << -1, 0, 0, -1.2379,
 							  0, 0, 1, 1.3061,
 							  0, 1, 0, -0.02,
 								  0, 0, 0, 1;
+
+
+	// happy birthday ground truth
+	/*
+	modelToWorldTransform << -1, 0, 0, -1.2379,
+							  0, 0, 1, 1.2861,
+							  0, 1, 0, -0.06,
+							  0, 0, 0, 1;
+*/
 }
 
 ModelRepresentation::~ModelRepresentation()
@@ -26,12 +37,14 @@ ModelRepresentation::~ModelRepresentation()
 
 void ModelRepresentation::subDivide()
 {
-	igl::upsample(V, F, 2);
+	igl::upsample(V, F, 1);
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
 	nVertexObservations = Eigen::VectorXd::Zero(nVert);
 	adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, nVert);
+	std::cout << "Subdivided..." << std::endl;
+
 }
 
 bool ModelRepresentation::loadFile(std::string path)

@@ -18,8 +18,8 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 	if (!error) error = lodepng::decode(image, width, height, png);	//needed?
 
 	//prepare openCV buffers
-	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
-	//ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_COLOR);			//BRG
+	//ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_GRAYSCALE);
+	ocvImage = cv::imread(filename, cv::ImreadModes::IMREAD_COLOR);			//BRG
 	x_size = ocvImage.cols;
 	y_size = ocvImage.rows; // really needed if we have width and height? (l. 12)
 
@@ -111,9 +111,8 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	cv::Mat img_c2 = image2.ocvImage;
 	cv::Mat patch1 = cv::Mat::zeros(patch_size,  img_c1.type());
 	cv::Mat patch2 = cv::Mat::zeros(patch_size, img_c1.type());
-	cv::Mat patch1BRG[3];
-	cv::Mat patch2BRG[3];
-
+	std::vector<cv::Mat> patch1BRG;
+	std::vector<cv::Mat> patch2BRG;
 
 	// get ex- & intrinsics of camera
 	Eigen::Matrix<double, 3, 3> R_wc1 = CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera1 orientation matrix (camera to world)
@@ -210,7 +209,15 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
 		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
 
-		correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
+		//V1: Mean
+		//correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
+		
+		//V2: Multiply
+		correlation = (correlationMat[0].at<float>(0, 0) * correlationMat[1].at<float>(0, 0) * correlationMat[2].at<float>(0, 0));
+
+		//std::cout << "blueCorr: " << correlationMat[0].at<float>(0, 0) << std::endl;
+		//std::cout << "redCorr: " << correlationMat[1].at<float>(0, 0) << std::endl;
+		//std::cout << "greenCorr: " << correlationMat[2].at<float>(0, 0) << std::endl;
 	}
 	// display images and patches, print stuff
 	/*
@@ -234,12 +241,15 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	polylines(right, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
 	cv::resize(patch1, patch1, cv::Size(150,150));
 	cv::resize(patch2, patch2, cv::Size(150,150));
+	cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
+	cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
 	cv::imshow("img2", right);
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
 	*/
+
 	return (double)correlation;
 }
 
@@ -319,6 +329,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
 	*/
+	
 	return correlation.at<double>(0, 0);
 }
 

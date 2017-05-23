@@ -63,6 +63,7 @@ int main()
 	parameters params;
 	loadParams("params.txt", params, true);
 
+
 	// Declare locals
 	std::string temp;
 	std::string path_with_prefix = params.path + "*.png";
@@ -70,11 +71,16 @@ int main()
 	Eigen::Matrix4d extrinsic;
 	int index = 0;
 
+
+
 	// loading model
-	//refiner.addInitModel(path + "sofa.obj");
+	//refiner.addInitModel(params.path + "sofa.obj");
 	refiner.addInitModel(params.path + "spatialMap_part.obj");
-	//refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
-	//refiner.addInitModel(path + "sofa.obj");
+	//refiner.addInitModel(params.path + "pureBuildupSofaConnected.obj"); 
+	//refiner.addInitModel(params.path + "sofa.obj");
+	//refiner.addInitModel(params.path + "pureBuildupSofaConnected.obj"); 
+	//refiner.addInitModel(params.path + "spatialMap_part.obj");
+	//refiner.addInitModel(params.path + "Kiste_GroundTruth_Pos.obj");
 
 
 	// load all pictures and matrices	

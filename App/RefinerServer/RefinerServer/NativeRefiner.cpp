@@ -37,8 +37,9 @@ std::string NativeRefiner::refine(int nReps)
 {
 
 	int nAdj;
+
 	if(params.useSubdivision)
-		model.subDivide();
+		model.subDivide();	
 
 	for(int i=0; i<nReps; i++){
 		std::cout << "Computing visibility..." << std::endl;
@@ -50,6 +51,7 @@ std::string NativeRefiner::refine(int nReps)
 		
 		// save intermediate refinement steps...
 		if (i < nReps - 1) {
+			std::string path = "C:/HappyBirthday/";
 			std::string name = "sofa_refined_intermediate" + std::to_string(i+1) + ".obj";
 			saveRefinedModel(params.path + name);
 		}
@@ -104,7 +106,7 @@ int NativeRefiner::computeVisibility() {
 
 	progressPrint(1, 1);
 	std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
-	std::ofstream visibilityFile("C:/SofaData/visibility.txt");
+	std::ofstream visibilityFile("C:/HappyBirthday/visibility.txt");
 	if (visibilityFile.is_open()) {
 		visibilityFile << visibility;
 		visibilityFile.close();
@@ -180,7 +182,9 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 
 		p_current += params.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
+
 		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, params.patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
+
 		
 		if (model.nVertexObservations(vertex) > 0.00001) {
 			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
@@ -195,6 +199,7 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 // This function computes adjustment scores for all vertices and pairs
 int NativeRefiner::computeAdjustmentScores() {
 	// loop through all vertices and images, find pairs and compute 
+
 
 	model.adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, model.nVert);
 	model.nVertexObservations = Eigen::VectorXd::Zero(model.nVert);
@@ -213,15 +218,16 @@ int NativeRefiner::computeAdjustmentScores() {
 
 		// regularization of mesh
 		Eigen::Vector3d midPoint;
-
 		bool isInside = model.computeCenter(v, midPoint);
 
-		Eigen::Vector3d p(model.V(v, 2), model.V(v, 0), model.V(v, 1));
-		Eigen::Vector3d n(model.VN(v, 2), model.VN(v, 0), model.VN(v, 1));
-		Eigen::Vector3d p_current = p - n*params.stepSize*params.nStepsDepthSearch / 2;
-		Eigen::Vector3d dtmp = midPoint - p_current;
+
+		Eigen::Vector3d p = model.V.row(v).transpose();
+		Eigen::Vector3d n = model.VN.row(v).transpose();
+		Eigen::Vector3d p_current = p - n*model.stepSize*model.nStepsDepthSearch / 2;
+		Eigen::Vector3d dtmp = midPoint - p;
+
 		
-		//std::cout << "Dist for Vertex" << dtmp.norm()<< std::endl;	//stimmt noch nicht... bis zu 12 m Abstand vertex zu Schwerpunkt von vertex nachbarn...
+		//std::cout << "Dist for Vertex " << v << ": "<< dtmp.norm()<< std::endl;	//stimmt noch nicht... bis zu 12 m Abstand vertex zu Schwerpunkt von vertex nachbarn...
 
 		for (int i = 0; i < params.nStepsDepthSearch; i++) {
 			p_current += params.stepSize*n;
@@ -229,7 +235,6 @@ int NativeRefiner::computeAdjustmentScores() {
 			model.adjustmentScores(i, v) += (isInside ? dtmp.squaredNorm()*params.smoothing_lambda : 0);
 			//std::cout << (isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
 		}
-
 		
 		//std::cout << "Adjustment scores for Vertex " << v << " are \n" << model.adjustmentScores.block<51, 1>(0, v) << std::endl << std::endl;
 
@@ -243,7 +248,6 @@ int NativeRefiner::computeAdjustmentScores() {
 	std::cout << "\nfinished computing adjustmentScores." << std::endl;		
 	return 0;
 }
-
 
 int NativeRefiner::adjustVertices() {
 
@@ -262,7 +266,7 @@ int NativeRefiner::adjustVertices() {
 			nAdj++;
 			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
 		}
-		if (v % 100 == 0) {
+		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
 		}
 	}
