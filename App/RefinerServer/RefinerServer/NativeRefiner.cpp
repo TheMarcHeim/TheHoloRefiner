@@ -225,7 +225,7 @@ int NativeRefiner::computeAdjustmentScores() {
 		}
 
 		// regularization of mesh
-		const double lambda = 0.01;
+		const double lambda = 0.005;
 		Eigen::Vector3d midPoint;
 
 		bool isInside = model.computeCenter(v, midPoint);
