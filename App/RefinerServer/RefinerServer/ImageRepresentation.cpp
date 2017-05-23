@@ -7,7 +7,9 @@
 ImageRepresentation::ImageRepresentation(std::string filename,
 	Eigen::Matrix4d pCameraViewTransform,
 	Eigen::Matrix4d pCameraProjectionTransform) {
-	
+	// load parameters
+	loadParams("params.txt", params);
+
 	//load PNG
 	std::vector<unsigned char> png;
 	unsigned width, height;
@@ -134,7 +136,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		// check if out-of-bounds (conservative - could do striclty less-than)
 	if (pix_u <= patch_size.width / 2 || pix_v <= patch_size.height / 2 || 
 		pix_u >= x_size - patch_size.width / 2 || pix_v >= y_size - patch_size.height / 2){
-		return 0;
+		return 0.0;
 	}
 	
 	
@@ -163,27 +165,12 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	p_c2[2] = cv::Point2f((hp3_c2(0) / hp3_c2(2) + 1) / 2 * x_size, (hp3_c2(1) / hp3_c2(2) + 1) / 2 * y_size);
 	p_c2[3] = cv::Point2f((hp4_c2(0) / hp4_c2(2) + 1) / 2 * x_size, (hp4_c2(1) / hp4_c2(2) + 1) / 2 * y_size);
 
-	////////test
-	/*
-	// computing center point of patch2 (projection of vertex into image 2)
-	Eigen::Vector3d vertInImg2 = K2*R_wc2.transpose()*(vertex - C2_w);									// projecting vertex into image 1, step 1												
-	double u2 = vertInImg2(0) / vertInImg2(2);																// u-coordinates of vertex projected into image1 ...
-	double v2 = vertInImg2(1) / vertInImg2(2);																// v-coordinates of vertex projected into image1 ...
-	double pix_u2 = (u2 + 1) / 2 * x_size;																	// ... expressed in pixel coordinates
-	double pix_v2 = (v2 + 1) / 2 * y_size;																	// ... expressed in pixel coordinates
-	// computing corners of patch in image 2 (homogeneous coordinates)
-	cv::Point2d p1_c2(pix_u2 + patch_size.width / 2, pix_v2 + patch_size.height / 2);						// patch in image 1, lower right corner
-	cv::Point2d p2_c2(pix_u2 - patch_size.width / 2, pix_v2 + patch_size.height / 2);						// patch in image 1, lower left corner
-	cv::Point2d p3_c2(pix_u2 + patch_size.width / 2, pix_v2 - patch_size.height / 2);						// patch in image 1, upper right corner
-	cv::Point2d p4_c2(pix_u2 - patch_size.width / 2, pix_v2 - patch_size.height / 2);						// patch in image 1, upper left corner
-	patch2 = cv::Mat(img_c2, cv::Rect(p4_c2.x, p4_c2.y, patch_size.width, patch_size.height));
-	*/
 
 	// check if second patch runs out of frame
 	for (int i = 0; i < 4; i++) {
 		if (p_c2[i].x <= patch_size.width / 2 || p_c2[i].y <= patch_size.height / 2 ||
 			p_c2[i].x >= x_size - patch_size.width / 2 || p_c2[i].y >= y_size - patch_size.height / 2)
-			return 0;
+			return 0.0;
 	}
 
 	// preparing target frame for perspective transform
@@ -204,7 +191,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	
 	patch1 = cv::Mat(img_c1, patch);											// extracting patch 1 from img_c1	
 
-	float correlation = 0;
+	float correlation = 0.0;
 	
 	if (colorFlag == 0) {			//Grayscale
 		cv::Mat correlationMat;
@@ -226,8 +213,8 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
 	}
 	// display images and patches, print stuff
-	
-	/*cv::Mat left = img_c1.clone();
+	/*
+	cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	//std::cout << "M is \n " << M << std::endl;
 	std::cout << "Correlation is: " << correlation << std::endl;
@@ -251,8 +238,8 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
-	cv::waitKey(1);*/
-
+	cv::waitKey(1);
+	*/
 	return (double)correlation;
 }
 
@@ -291,7 +278,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 																											// check if out-of-bounds (conservative - could do striclty less-than)
 	if (pix_u1 <= patch_size.width / 2 || pix_v1 <= patch_size.height / 2 ||
 		pix_u1 >= x_size - patch_size.width / 2 || pix_v1 >= y_size - patch_size.height / 2)
-		return 0;
+		return 0.0;
 
 	Eigen::Vector3d vertInImg2 = K2*R_wc2.transpose()*(vertex - C2_w);									// projecting vertex into image 2, step 1												
 	double u2 = vertInImg2(0) / vertInImg2(2);															// u-coordinates of vertex projected into image2 ...
@@ -302,7 +289,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 																										// check if out-of-bounds (conservative - could do striclty less-than)
 	if (pix_u2 <= patch_size.width / 2 || pix_v2 <= patch_size.height / 2 ||
 		pix_u2 >= x_size - patch_size.width / 2 || pix_v2 >= y_size - patch_size.height / 2)
-		return 0;
+		return 0.0;
 
 	cv::Point2d p4_c1(pix_u1 - patch_size.width / 2, pix_v1 - patch_size.height / 2);					// patch in image 1, upper left corner
 	cv::Point2d p4_c2(pix_u2 - patch_size.width / 2, pix_v2 - patch_size.height / 2);

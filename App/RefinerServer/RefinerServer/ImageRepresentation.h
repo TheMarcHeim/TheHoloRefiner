@@ -10,6 +10,7 @@
 #include "opencv/cv.h"
 #include "opencv2\highgui\highgui.hpp"
 #include <iostream>
+#include "readParams.h"
 
 	class ImageRepresentation
 	{
@@ -40,7 +41,7 @@
 		/// </summary>
 		double getViewQuality(Eigen::Vector3d vertex, Eigen::Vector3d normal, ImageRepresentation& image2);
 
-
+		parameters params;
 		const std::string filename;
 		std::vector<unsigned char> image;
 		cv::Mat ocvImage;

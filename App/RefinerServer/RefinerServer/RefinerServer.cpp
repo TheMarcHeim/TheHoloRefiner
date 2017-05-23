@@ -13,6 +13,7 @@
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv/cv.h"
 #include <Windows.h>
+#include "readParams.h"
 
 
 void loadMats(Eigen::Matrix4d& f, Eigen::Matrix4d& s, std::string path) {
@@ -57,23 +58,22 @@ void loadMats(Eigen::Matrix4d& f, Eigen::Matrix4d& s, std::string path) {
 
 int main()
 {
+	// Instantiate refiner and load parameters
 	NativeRefiner refiner;
+	parameters params;
+	loadParams("params.txt", params, true);
 
-	std::string path = "C:/SofaData/"; // path to dataset
-	//std::string path = "C:/HappyBirthday/";
-
+	// Declare locals
 	std::string temp;
-	std::string path_with_prefix = path + "*.png";
+	std::string path_with_prefix = params.path + "*.png";
 	Eigen::Matrix4d intrinsic;
 	Eigen::Matrix4d extrinsic;
 	int index = 0;
-	int maxNImg = 8;
 
 	// loading model
-
 	//refiner.addInitModel(path + "sofa.obj");
-	//refiner.addInitModel(path + "spatialMap_part.obj");
-	refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
+	refiner.addInitModel(params.path + "spatialMap_part.obj");
+	//refiner.addInitModel(path + "pureBuildupSofaConnected.obj"); 
 	//refiner.addInitModel(path + "sofa.obj");
 
 
@@ -86,24 +86,23 @@ int main()
 				if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 					std::wstring ws = std::wstring(fd.cFileName);
 					temp = std::string(ws.begin(), ws.end());
-					loadMats(extrinsic, intrinsic, path+ temp + ".matr");
-					refiner.addPicture(path + temp, extrinsic, intrinsic);
+					loadMats(extrinsic, intrinsic, params.path+ temp + ".matr");
+					refiner.addPicture(params.path + temp, extrinsic, intrinsic);
 
 					std::cout << "loaded picture and matrix for " << temp << " \n";
 					index++;
 				}
-			} while (::FindNextFile(hFind, &fd) && index<maxNImg);
+			} while (::FindNextFile(hFind, &fd) && index<params.maxNimages);
 			::FindClose(hFind);
 		}
-
 	std::cout << "Number of loaded images: " << refiner.getNImages() <<"\n";
 
 	// refine
-	std::string out = refiner.refine(2);
+	std::string out = refiner.refine(params.nRefinementIt);
 	std::cout << "Finished Refinement \n";
 
 	// save refined
-	refiner.saveRefinedModel(path + "sofa_refined.obj");
+	refiner.saveRefinedModel(params.path + "sofa_refined.obj");
 	std::cout << "Saved refined model\n";
 
 	// Done. Now loop forever to keep terminal from closing

@@ -6,20 +6,18 @@
 ModelRepresentation::ModelRepresentation()
 {
 
-	nStepsDepthSearch = 51;
-	stepSize = 0.005; 
-	refineTolerance = 0.000; // only adjust vertex if new one is this much better
+	loadParams("params.txt", params);
 	
-	modelToWorldTransform << 0, 0, 1, 0.02,
-							 1, 0, 0, 0.19,
-							 0, 1, 0, -0.06,
-							 0, 0, 0, 1; // sofa dataset
+	//modelToWorldTransform << 0, 0, 1, 0.02,
+	//						 1, 0, 0, 0.19,
+	//						 0, 1, 0, -0.06,
+	//						 0, 0, 0, 1; // sofa dataset
 
 	// happy birthday dataset capture 1
-	/*modelToWorldTransform << -1, 0, 0, -1.2379,
+	modelToWorldTransform << -1, 0, 0, -1.2379,
 							  0, 0, 1, 1.3061,
 							  0, 1, 0, -0.02,
-								  0, 0, 0, 1;*/
+								  0, 0, 0, 1;
 }
 
 ModelRepresentation::~ModelRepresentation()
@@ -33,34 +31,30 @@ void ModelRepresentation::subDivide()
 	nTriang = F.rows();
 	nVert = V.rows();
 	nVertexObservations = Eigen::VectorXd::Zero(nVert);
-	adjustmentScores = Eigen::MatrixXd::Zero(nStepsDepthSearch, nVert);
+	adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, nVert);
 }
 
 bool ModelRepresentation::loadFile(std::string path)
 {
-	//we do it now with libigl
-
 	Eigen::MatrixXd tempV; 
 	igl::readOBJ(path.c_str(), tempV, F);
 
 	Eigen::MatrixXd tempVh = Eigen::MatrixXd::Constant(tempV.cols()+1, tempV.rows(), 1.0);
 	tempVh.block(0,0,tempV.cols(), tempV.rows()) = tempV.transpose();
 	V = (modelToWorldTransform*tempVh).transpose().block(0, 0, tempV.rows(), 3);
-	
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();
 	nVertexObservations = Eigen::VectorXd::Zero(nVert);
-	adjustmentScores = Eigen::MatrixXd::Zero(nStepsDepthSearch, nVert);
-	std::cout << "\n" << "Number of vertices: " << nVert << "\n";
-	std::cout << "\n" << "Number of triangles: " << nTriang << "\n";
+	adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, nVert);
+	std::cout  << "Number of vertices: " << nVert << "\n";
+	std::cout  << "Number of triangles: " << nTriang << "\n";
 
 	return true;
 }
 
 bool ModelRepresentation::saveFile(std::string path)
 {
-	//we do it now with libigl
 	igl::writeOBJ(path.c_str(), V, F);
 	return true;
 }

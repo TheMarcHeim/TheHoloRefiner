@@ -7,7 +7,7 @@
 
 NativeRefiner::NativeRefiner()
 {
-	patch_size = cv::Size(9,9); // to be experimented with - later implement in a parameter file preferably
+	loadParams("params.txt", params);
 }
 
 void NativeRefiner::reset()
@@ -37,7 +37,8 @@ std::string NativeRefiner::refine(int nReps)
 {
 
 	int nAdj;
-	model.subDivide();
+	if(params.useSubdivision)
+		model.subDivide();
 
 	for(int i=0; i<nReps; i++){
 		std::cout << "Computing visibility..." << std::endl;
@@ -47,13 +48,10 @@ std::string NativeRefiner::refine(int nReps)
 		std::cout << "Adjusting vertices..." << std::endl;
 		nAdj = adjustVertices();
 		
-		std::cout << "Percentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
-		
 		// save intermediate refinement steps...
 		if (i < nReps - 1) {
-			std::string path = "C:/SofaData/";
 			std::string name = "sofa_refined_intermediate" + std::to_string(i+1) + ".obj";
-			saveRefinedModel(path + name);
+			saveRefinedModel(params.path + name);
 		}
 	}
 	return "done";
@@ -115,8 +113,6 @@ int NativeRefiner::computeVisibility() {
 }
 
 bool NativeRefiner::isVisible(int thisVertex, int thisView) {
-
-	double threshold = 0.0;				// threshold for visibility
 	bool visible = false;
 	
 	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
@@ -126,10 +122,6 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 	Eigen::Vector3d P_w = model.V.block<1, 3>(thisVertex, 0).transpose();		
 	Eigen::Vector3d N_w = model.VN.block<1, 3>(thisVertex, 0).transpose();
 	
-	
-	/*if (N_w(0) != N_w(0) || N_w(0) != N_w(0) || N_w(0) != N_w(0)) {
-		std::cout << "got some NANs here, index:" << thisVertex << std::endl;
-	}*/
 
 	Eigen::Vector3d vertInCam = R_wc.transpose()*(P_w - C_w);											// ... in camera frame
 	Eigen::Vector3d vertInImg = K*vertInCam;															// ... in image frame, homgeneous
@@ -142,13 +134,13 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		if(vertInImg(0)>= -vertInImg(2) && vertInImg(0) <= vertInImg(2) && vertInImg(1) >= -vertInImg(2) && vertInImg(1) <= vertInImg(2)){
 			// check if patch is reasonably facing the camera using surface normal
 
-			if (N_w.normalized().dot((C_w - P_w).normalized()) > threshold) {
+			if (N_w.normalized().dot((C_w - P_w).normalized()) > params.min_angle_view) {
 				visible = true;
 			}
 		}
 	}
 
-
+	
 	if (visible) {
 		//check if occluded
 		//positional vector
@@ -156,15 +148,15 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		Eigen::Vector3d dir = camToPos.normalized();
 		double expDist = camToPos.norm(); 		//expected distance
 		igl::Hit hit; //first hit
-		const double tolerance = 0.05;
 		bool hasHit = igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.V, model.F, hit);
 		
 		//check distance
-		if (hasHit && hit.t < expDist - tolerance)
+		if (hasHit && hit.t < expDist - params.occlustion_hitpoint_max_distance)
 		{
 			visible = false;
 		}
 	}
+	
 	
 	return visible;
 }
@@ -176,23 +168,19 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	Eigen::Vector3d n(0, 0, 0);
 	Eigen::Vector3d p_current(0, 0, 0);
 
-
 	p << model.V.block<1, 3>(vertex, 0).transpose();
 	n << model.VN.block<1, 3>(vertex, 0).transpose();
-	p_current = p - n*model.stepSize*model.nStepsDepthSearch/2; // start at negative position along normal
-
+	p_current = p - n*params.stepSize*params.nStepsDepthSearch/2; // start at negative position along normal
 
 	double weight =  images[view1].getViewQuality(p, n, images[view2]);
 	
-
 	model.nVertexObservations(vertex)+=weight; // needed for averaging
 
+	for (int i = 0; i < params.nStepsDepthSearch; i++) {
 
-	for (int i = 0; i < model.nStepsDepthSearch; i++) {
-
-		p_current += model.stepSize*n;
+		p_current += params.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
-		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
+		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, params.patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		
 		if (model.nVertexObservations(vertex) > 0.00001) {
 			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
@@ -208,9 +196,8 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 int NativeRefiner::computeAdjustmentScores() {
 	// loop through all vertices and images, find pairs and compute 
 
-	///////////////// TODO //////////
-	model.adjustmentScores = Eigen::MatrixXd::Zero(model.nStepsDepthSearch, model.nVert);
-	//TODO model.nVertexObservations = 0
+	model.adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, model.nVert);
+	model.nVertexObservations = Eigen::VectorXd::Zero(model.nVert);
 
 	for (int v = 0; v < model.nVert; v++) {
 		for (int firstSight = 0; firstSight < nImages; firstSight++) {
@@ -225,22 +212,21 @@ int NativeRefiner::computeAdjustmentScores() {
 		}
 
 		// regularization of mesh
-		const double lambda = 0.005;
 		Eigen::Vector3d midPoint;
 
 		bool isInside = model.computeCenter(v, midPoint);
 
 		Eigen::Vector3d p(model.V(v, 2), model.V(v, 0), model.V(v, 1));
 		Eigen::Vector3d n(model.VN(v, 2), model.VN(v, 0), model.VN(v, 1));
-		Eigen::Vector3d p_current = p - n*model.stepSize*model.nStepsDepthSearch / 2;
+		Eigen::Vector3d p_current = p - n*params.stepSize*params.nStepsDepthSearch / 2;
 		Eigen::Vector3d dtmp = midPoint - p_current;
 		
 		//std::cout << "Dist for Vertex" << dtmp.norm()<< std::endl;	//stimmt noch nicht... bis zu 12 m Abstand vertex zu Schwerpunkt von vertex nachbarn...
 
-		for (int i = 0; i < model.nStepsDepthSearch; i++) {
-			p_current += model.stepSize*n;
+		for (int i = 0; i < params.nStepsDepthSearch; i++) {
+			p_current += params.stepSize*n;
 			dtmp = midPoint - p_current;
-			model.adjustmentScores(i, v) += (isInside ? dtmp.squaredNorm()*lambda : 0);
+			model.adjustmentScores(i, v) += (isInside ? dtmp.squaredNorm()*params.smoothing_lambda : 0);
 			//std::cout << (isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
 		}
 
@@ -263,25 +249,25 @@ int NativeRefiner::adjustVertices() {
 
 	int nAdj = 0;
 	for (int v = 0; v < model.nVert; v++) { //loop through all vertices
-		int bestVertex = model.nStepsDepthSearch / 2;
+		int bestVertex = params.nStepsDepthSearch / 2;
 		double bestScore = model.adjustmentScores(bestVertex, v); //initial score
-		for (int i = 0; i < model.nStepsDepthSearch; i++) {
+		for (int i = 0; i < params.nStepsDepthSearch; i++) {
 			if (model.adjustmentScores(i, v) > bestScore ) {//+ model.refineTolerance*pow(i - model.nStepsDepthSearch / 2, 2)
 				bestScore = model.adjustmentScores(i, v);
 				bestVertex = i;
 			}
 		}
-		if (bestScore > model.adjustmentScores(model.nStepsDepthSearch / 2, v) + model.refineTolerance*pow(bestVertex - model.nStepsDepthSearch / 2, 1.2)) {
-			model.V.block<1, 3>(v, 0) += model.stepSize*(bestVertex - model.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
+		if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance*pow(bestVertex - params.nStepsDepthSearch / 2, 1.2)) {
+			model.V.block<1, 3>(v, 0) += params.stepSize*(bestVertex - params.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
-			std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
+			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
 		}
 		if (v % 100 == 0) {
 			progressPrint(v, model.nVert);
 		}
 	}
 	progressPrint(1, 1);
-	std::cout << "\nFinished adjusting Vertices.\nPercentage of adjusted vertices: " << ((double)nAdj) / ((double)model.nVert) << std::endl;
+	std::cout << "\nFinished adjusting Vertices.\nPercentage of adjusted vertices: " << 100*nAdj /model.nVert << "%" << std::endl;
 
 	// debatable if we should recompute normals here
 	model.computeNormals();

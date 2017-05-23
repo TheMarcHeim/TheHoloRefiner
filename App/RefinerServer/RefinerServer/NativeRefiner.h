@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <iostream>
+#include "readParams.h"
 //#include <igl/viewer/Viewer.h> didn't work until now
 
 
@@ -13,21 +14,6 @@
 	{
 	public:
 		NativeRefiner();
-
-		//usage in c#:
-		//first:
-		//var refiner = new NativerRefinerComponent.NativeRefiner();
-		//refiner.reset();
-		//for all images:
-		//	refiner.addpicture(path, CameraViewTransform, CameraProjectionTransform);
-		//refiner.addInitModel(path)
-		//var asyncOp = refiner.Refine()
-		//lambda for progress
-		//asyncOp.Progress = (asyncInfo, progress) =>
-		//	{do UI update of progress bar};
-		//var async pathOfRefinedMesh = await asyncOp
-
-
 
 		/// <summary>
 		/// delete pictures
@@ -55,7 +41,6 @@
 		/// <summary>
 		/// Async task that refines the reconstruction
 		/// </summary>
-
 		std::string refine(int nReps);
 
 		/// <summary>
@@ -68,7 +53,9 @@
 		/// </summary>
 		int getNImages();
 
-
+		/// <summary>
+		/// test projection
+		/// </summary>
 		void testPrj();
 
 		/// <summary>
@@ -105,9 +92,10 @@
 
 
 		std::vector<ImageRepresentation, Eigen::aligned_allocator<Eigen::Matrix4f>> images;
+
 	private:
+		parameters params;
 		ModelRepresentation model;
-		cv::Size patch_size;
 		int nImages;
 		Eigen::MatrixXi visibility; //rows: vertices, columns: images
 	};
