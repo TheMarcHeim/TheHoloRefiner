@@ -179,42 +179,47 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 
 	p << model.V.block<1, 3>(vertex, 0).transpose();
 	n << model.VN.block<1, 3>(vertex, 0).transpose();
-	p_current = p - n*params.stepSize*params.nStepsDepthSearch/2; // start at negative position along normal
+	p_current = p - n*params.stepSize*params.nStepsDepthSearch / 2; // start at negative position along normal
 	double correlation;
-	double weight =  images[view1].getViewQuality(p, n, images[view2]);
-	
-	model.nVertexObservations(vertex)+=weight; // needed for averaging
+	double weight = images[view1].getViewQuality(p, n, images[view2]);
 
-	/* 
-	// for live plotting
-	cv::Mat plot;
-	plot.create(cv::Size(200, params.nStepsDepthSearch), 0);// = cv::Mat::zeros(100, params.nStepsDepthSearch);
-	plot.setTo(255);
-	cv::namedWindow("plot", cv::WINDOW_NORMAL);
+	model.nVertexObservations(vertex) += weight; // needed for averaging
+
 	int temp;
-	*/
+	cv::Mat plot;
+	if (params.liveview) {
+		// for live plotting
+		plot.create(cv::Size(200, params.nStepsDepthSearch), 0);// = cv::Mat::zeros(100, params.nStepsDepthSearch);
+		plot.setTo(255);
+		cv::namedWindow("plot", cv::WINDOW_NORMAL);
+	}
+	
 
 
 	for (int i = 0; i < params.nStepsDepthSearch; i++) {
 
 		p_current += params.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
-		correlation = images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, params.patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
+		correlation = images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, params.patch_size, (params.useRGB?1:0));		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		model.adjustmentScores(i, vertex) += weight*correlation;
 		
 		if (model.nVertexObservations(vertex) > 0.00001) {
 			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 		}
 
-		/*
-		// live plotting
-		temp = (int)(200-correlation * 200);
-		if (temp >= 200) temp = 199;
-		if (temp <= 0) temp = 0;
-		plot.at<uint8_t>(temp, i) = 0;
-		imshow("plot", plot);
-		cv::waitKey(1);
-		*/
+		if (params.liveview) {
+			// live plotting
+			int scale = 100;
+			if(params.fullnormalize)
+				temp = (int)(0.5*scale - correlation * scale);
+			else
+				temp = (int)(scale - correlation * scale);
+			if (temp >= scale) temp = scale - 1;
+			if (temp <= 0) temp = 0;
+			plot.at<uint8_t>(temp, i) = 0;
+			imshow("plot", plot);
+			cv::waitKey(1);
+		}
 	} 
 }
 

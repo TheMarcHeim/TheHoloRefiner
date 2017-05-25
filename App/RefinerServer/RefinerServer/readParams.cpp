@@ -76,6 +76,26 @@ void loadParams(std::string path, parameters& p, bool verbose) {
 			if (verbose)
 			std::cout << "maxNimages set to: " << p.maxNimages << std::endl;
 		}
+		else if (line.find("gaussian") != std::string::npos) {
+			sin >> p.gaussian;
+			if (verbose)
+				std::cout << "guassian set to: " << p.gaussian << std::endl;
+		}
+		else if (line.find("downsample") != std::string::npos) {
+			sin >> p.downsample;
+			if (verbose)
+				std::cout << "downsample set to: " << p.downsample << std::endl;
+		}
+		else if (line.find("liveview") != std::string::npos) {
+			sin >> p.liveview;
+			if (verbose)
+				std::cout << "liveview set to: " << p.liveview << std::endl;
+		}
+		else if (line.find("fullnormalize") != std::string::npos) {
+			sin >> p.fullnormalize;
+			if (verbose)
+				std::cout << "fullnormalize set to: " << p.fullnormalize << std::endl;
+		}
 		sin.clear();
 	}
 }

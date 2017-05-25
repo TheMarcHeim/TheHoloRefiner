@@ -17,6 +17,10 @@ struct parameters {
 	int maxNimages = 30;
 	bool useRGB = false;
 	bool useSubdivision = true;
+	double gaussian = 0;
+	int downsample = 0;
+	bool liveview = false;
+	bool fullnormalize = false;
 };
 
 typedef struct parameters parameters;

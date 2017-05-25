@@ -25,6 +25,24 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 	x_size = ocvImage.cols;
 	y_size = ocvImage.rows; // really needed if we have width and height? (l. 12)
 
+	if (params.gaussian > 0.001) {
+		//gauss that shit
+		cv::Mat newImg;
+		cv::Size size;
+		size.height = -1;
+		size.width = -1;
+		cv::GaussianBlur(ocvImage, newImg, size, params.gaussian);
+		ocvImage = newImg;
+	}
+
+	if (params.downsample > 1) {
+		cv::Size size;
+		size.width = ocvImage.cols / params.downsample;
+		size.height = ocvImage.rows / params.downsample;
+		cv::Mat newImg;
+		cv::resize(ocvImage, newImg, size);
+		ocvImage = newImg;
+	}
 
 	/*CONVENTION:
 
@@ -207,6 +225,29 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		cv::split(patch1, patch1BRG);
 		cv::split(patch2, patch2BRG);
 
+
+		if (params.fullnormalize) {
+			//test it with proper normalization
+			for (int i = 0; i < 3; i++) {
+				cv::Scalar avg, sdv;
+				cv::meanStdDev(patch1BRG[i], avg, sdv);
+				//std::cout << avg[0] << "/" << sdv[0] << std::endl;
+				cv::Mat image_32f;
+				patch1BRG[i].convertTo(image_32f, CV_32F, 1 / sdv.val[0], -avg.val[0] / sdv.val[0]);
+				patch1BRG[i] = image_32f;
+			}
+
+			//test it with proper normalization
+			for (int i = 0; i < 3; i++) {
+				cv::Scalar avg, sdv;
+				cv::meanStdDev(patch2BRG[i], avg, sdv);
+				cv::Mat image_32f;
+				patch2BRG[i].convertTo(image_32f, CV_32F, 1 / sdv.val[0], -avg.val[0] / sdv.val[0]);
+				patch2BRG[i] = image_32f;
+			}
+		}
+
+
 		cv::matchTemplate(patch1BRG[0], patch2BRG[0], correlationMat[0], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Blue channel
 		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
 		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
@@ -223,34 +264,35 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	}
 
 	// display images and patches, print stuff
-	/*
-	cv::Mat left = img_c1.clone();
-	cv::Mat right = img_c2.clone();
-	//std::cout << "M is \n " << M << std::endl;
-	std::cout << "Correlation is: " << correlation << std::endl;
-	cv::namedWindow("img1", cv::WINDOW_NORMAL);
-	cv::namedWindow("img2", cv::WINDOW_NORMAL);
-	cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
-	cv::namedWindow("patch2", CV_WINDOW_AUTOSIZE);
-	cv::rectangle(left, patch, cv::Scalar(250, 255, 255), 5, 8, 0);
-	std::vector< cv::Point> contour;
-	contour.push_back(cv::Point((int)p_c2[0].x, (int)p_c2[0].y));
-	contour.push_back(cv::Point((int)p_c2[2].x, (int)p_c2[2].y));
-	contour.push_back(cv::Point((int)p_c2[3].x, (int)p_c2[3].y));
-	contour.push_back(cv::Point((int)p_c2[1].x, (int)p_c2[1].y));
-	const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
-	int npts = cv::Mat(contour).rows;
-	polylines(right, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
-	cv::resize(patch1, patch1, cv::Size(150,150));
-	cv::resize(patch2, patch2, cv::Size(150,150));
-	//cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
-	//cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
-	cv::imshow("img2", right);
-	cv::imshow("img1", left);
-	cv::imshow("patch1", patch1);
-	cv::imshow("patch2", patch2);
-	cv::waitKey(1);
-	*/
+	if (params.liveview) {
+		cv::Mat left = img_c1.clone();
+		cv::Mat right = img_c2.clone();
+		//std::cout << "M is \n " << M << std::endl;
+		std::cout << "Correlation is: " << correlation << std::endl;
+		cv::namedWindow("img1", cv::WINDOW_NORMAL);
+		cv::namedWindow("img2", cv::WINDOW_NORMAL);
+		cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
+		cv::namedWindow("patch2", CV_WINDOW_AUTOSIZE);
+		cv::rectangle(left, patch, cv::Scalar(250, 255, 255), 5, 8, 0);
+		std::vector< cv::Point> contour;
+		contour.push_back(cv::Point((int)p_c2[0].x, (int)p_c2[0].y));
+		contour.push_back(cv::Point((int)p_c2[2].x, (int)p_c2[2].y));
+		contour.push_back(cv::Point((int)p_c2[3].x, (int)p_c2[3].y));
+		contour.push_back(cv::Point((int)p_c2[1].x, (int)p_c2[1].y));
+		const cv::Point *pts = (const cv::Point*) cv::Mat(contour).data;
+		int npts = cv::Mat(contour).rows;
+		polylines(right, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
+		cv::resize(patch1, patch1, cv::Size(150, 150));
+		cv::resize(patch2, patch2, cv::Size(150, 150));
+		//cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
+		//cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
+		cv::imshow("img2", right);
+		cv::imshow("img1", left);
+		cv::imshow("patch1", patch1);
+		cv::imshow("patch2", patch2);
+		cv::waitKey(1);
+	}
+	
 
 	return (double)correlation;
 }
@@ -311,9 +353,10 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	patch1 = cv::Mat(img_c1, patch1Boundary);
 	patch2 = cv::Mat(img_c2, patch2Boundary);
 	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCOEFF_NORMED);
+	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCOEFF_NORMED);
 
 	// display images and patches, print stuff
-	/*
+	
 	cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	std::cout << "Correlation is: " << correlation.at<double>(0, 0) << std::endl;
@@ -330,7 +373,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
-	*/
+	
 	
 	return correlation.at<double>(0, 0);
 }
