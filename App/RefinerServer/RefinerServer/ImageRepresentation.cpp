@@ -220,8 +220,27 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		//std::cout << "greenCorr: " << correlationMat[2].at<float>(0, 0) << std::endl;
 	}
 
+	//// HISTOGRAM CORRELATION ////
+
+	int histSize = 256;
+	float range[] = {0,256};
+	const float* histRange = { range };
+	bool uniform = true; bool accumulate = false;
+
+	cv::Mat b_hist1, g_hist1, r_hist1, b_hist2, g_hist2, r_hist2;
+
+	cv::calcHist(&patch1BRG[0], 1, 0, cv::Mat(), b_hist1, 1, &histSize, &histRange, uniform, accumulate);
+	cv::calcHist(&patch1BRG[1], 1, 0, cv::Mat(), g_hist1, 1, &histSize, &histRange, uniform, accumulate);
+	cv::calcHist(&patch1BRG[2], 1, 0, cv::Mat(), r_hist1, 1, &histSize, &histRange, uniform, accumulate);
+
+	cv::calcHist(&patch2BRG[0], 1, 0, cv::Mat(), b_hist2, 1, &histSize, &histRange, uniform, accumulate);
+	cv::calcHist(&patch2BRG[1], 1, 0, cv::Mat(), g_hist2, 1, &histSize, &histRange, uniform, accumulate);
+	cv::calcHist(&patch2BRG[2], 1, 0, cv::Mat(), r_hist2, 1, &histSize, &histRange, uniform, accumulate);
+
+
 	// display images and patches, print stuff
 	/*
+	int channel = 1;
 	cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	//std::cout << "M is \n " << M << std::endl;
@@ -242,8 +261,8 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	polylines(right, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
 	cv::resize(patch1, patch1, cv::Size(150,150));
 	cv::resize(patch2, patch2, cv::Size(150,150));
-	//cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
-	//cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
+	cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
+	cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
 	cv::imshow("img2", right);
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
@@ -312,7 +331,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCOEFF_NORMED);
 
 	// display images and patches, print stuff
-	/*
+	
 	cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	std::cout << "Correlation is: " << correlation.at<double>(0, 0) << std::endl;
@@ -329,7 +348,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::imshow("patch1", patch1);
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
-	*/
+	
 	
 	return correlation.at<double>(0, 0);
 }
@@ -349,6 +368,7 @@ double ImageRepresentation::getViewQuality(Eigen::Vector3d vertex, Eigen::Vector
 	double weight = (-cos(angle) + 1) / 2;	//viewing angle 45° -> weight 1, viewing angle 0° or >=90° -> weight 0
 
 	weight *= VtoC1.normalized().dot(normal)*VtoC2.normalized().dot(normal);
+
 
 	/*if (abs(weight) < 0.00001) {
 		std::cout << "weight = 0" << std::endl;
