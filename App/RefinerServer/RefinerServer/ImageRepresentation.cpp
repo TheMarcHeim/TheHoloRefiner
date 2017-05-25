@@ -219,6 +219,7 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		//std::cout << "redCorr: " << correlationMat[1].at<float>(0, 0) << std::endl;
 		//std::cout << "greenCorr: " << correlationMat[2].at<float>(0, 0) << std::endl;
 	}
+
 	// display images and patches, print stuff
 	/*
 	cv::Mat left = img_c1.clone();
@@ -241,8 +242,8 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	polylines(right, &pts, &npts, 1, true, cv::Scalar(255, 255, 255), 5, 8, 0);
 	cv::resize(patch1, patch1, cv::Size(150,150));
 	cv::resize(patch2, patch2, cv::Size(150,150));
-	cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
-	cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
+	//cv::resize(patch1BRG[channel], patch1BRG[channel], cv::Size(150, 150));
+	//cv::resize(patch2BRG[channel], patch2BRG[channel], cv::Size(150, 150));
 	cv::imshow("img2", right);
 	cv::imshow("img1", left);
 	cv::imshow("patch1", patch1);
@@ -308,7 +309,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::Mat correlation;
 	patch1 = cv::Mat(img_c1, patch1Boundary);
 	patch2 = cv::Mat(img_c2, patch2Boundary);
-	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCORR_NORMED);
+	cv::matchTemplate(patch1, patch2, correlation, cv::TemplateMatchModes::TM_CCOEFF_NORMED);
 
 	// display images and patches, print stuff
 	/*

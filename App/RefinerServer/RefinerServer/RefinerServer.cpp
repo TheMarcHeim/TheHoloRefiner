@@ -75,11 +75,11 @@ int main()
 
 	// loading model
 	//refiner.addInitModel(params.path + "sofa.obj");
-	refiner.addInitModel(params.path + "spatialMap_part.obj");
+	//refiner.addInitModel(params.path + "spatialMap_part.obj");
 	//refiner.addInitModel(params.path + "pureBuildupSofaConnected.obj"); 
 	//refiner.addInitModel(params.path + "sofa.obj");
 	//refiner.addInitModel(params.path + "pureBuildupSofaConnected.obj"); 
-	//refiner.addInitModel(params.path + "spatialMap_part.obj");
+	refiner.addInitModel(params.path + "spatialMap_part.obj");
 	//refiner.addInitModel(params.path + "Kiste_GroundTruth_Pos.obj");
 
 

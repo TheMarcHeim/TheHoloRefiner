@@ -50,11 +50,11 @@ std::string NativeRefiner::refine(int nReps)
 		nAdj = adjustVertices();
 		
 		// save intermediate refinement steps...
-		if (i < nReps - 1) {
-			std::string path = "C:/HappyBirthday/";
+		/*if (i < nReps - 1) {
+			std::string path = "C:/HappyBirthday/intermediates/";
 			std::string name = "sofa_refined_intermediate" + std::to_string(i+1) + ".obj";
 			saveRefinedModel(params.path + name);
-		}
+		}*/
 	}
 	return "done";
 
@@ -105,12 +105,12 @@ int NativeRefiner::computeVisibility() {
 	}
 
 	progressPrint(1, 1);
-	std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
+	/*std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
 	std::ofstream visibilityFile("C:/HappyBirthday/visibility.txt");
 	if (visibilityFile.is_open()) {
 		visibilityFile << visibility;
 		visibilityFile.close();
-	}
+	}*/
 	return nVis;
 }
 
@@ -200,6 +200,10 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 int NativeRefiner::computeAdjustmentScores() {
 	// loop through all vertices and images, find pairs and compute 
 
+	// For writing out data
+	std::string pathOut = "C:/HappyBirthday/AdjScrV_";
+	std::string suffixOut = ".txt";
+	int frequency = 100;
 
 	model.adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, model.nVert);
 	model.nVertexObservations = Eigen::VectorXd::Zero(model.nVert);
@@ -216,23 +220,56 @@ int NativeRefiner::computeAdjustmentScores() {
 			}
 		}
 
+		if (v % frequency == 0) {
+
+			std::string nameOut = std::to_string(v);
+			std::ofstream AdjScrV;
+			AdjScrV.open(pathOut + nameOut + suffixOut, std::ios::app);
+
+			if (AdjScrV.is_open()) {
+				AdjScrV << "Adjustment scores without regularization" << std::endl;
+				AdjScrV << model.adjustmentScores.col(v) << std::endl;
+				AdjScrV.close();
+			}
+		}
+
 		// regularization of mesh
 		Eigen::Vector3d midPoint;
 		bool isInside = model.computeCenter(v, midPoint);
 		Eigen::Vector3d p = model.V.row(v).transpose();
 		Eigen::Vector3d n = model.VN.row(v).transpose();
 		Eigen::Vector3d p_current = p - n*params.stepSize*params.nStepsDepthSearch / 2;
+		
+		//marcs anti oscillation modification
+		midPoint = 0.66*midPoint + 0.34*p;
+
 		Eigen::Vector3d dtmp = midPoint - p;
-		//std::cout << "Dist for Vertex " << v << ": "<< dtmp.norm()<< std::endl;	//stimmt noch nicht... bis zu 12 m Abstand vertex zu Schwerpunkt von vertex nachbarn...
+		//std::cout << "Dist for Vertex " << v << ": "<< dtmp.norm()<< std::endl;	
 
 		for (int i = 0; i < params.nStepsDepthSearch; i++) {
 			p_current += params.stepSize*n;
 			dtmp = midPoint - p_current;
-			model.adjustmentScores(i, v) += (isInside ? dtmp.squaredNorm()*params.smoothing_lambda : 0);
+			//std::cout << model.adjustmentScores(i, v);
+			model.adjustmentScores(i, v) -= (isInside ? dtmp.squaredNorm()*params.smoothing_lambda : 0);
+			//std::cout <<"/"<< model.adjustmentScores(i, v) << std::endl;
 			//std::cout << (isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
 		}
 		
 		//std::cout << "Adjustment scores for Vertex " << v << " are \n" << model.adjustmentScores.block<51, 1>(0, v) << std::endl << std::endl;
+
+		if (v % frequency == 0) {
+
+			std::string nameOut = std::to_string(v);
+			std::ofstream AdjScrV;
+			AdjScrV.open(pathOut + nameOut + suffixOut, std::ios::app);
+
+			if (AdjScrV.is_open()) {
+				AdjScrV << "Adjustment scores with regularization" << std::endl;
+				AdjScrV << model.adjustmentScores.col(v) << std::endl;
+				AdjScrV.close();
+			}
+		}
+
 
 		// print progress
 		if (v % 10 == 0) {
@@ -257,11 +294,11 @@ int NativeRefiner::adjustVertices() {
 				bestVertex = i;
 			}
 		}
-		if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance*pow(bestVertex - params.nStepsDepthSearch / 2, 1.2)) {
+		//if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
 			model.V.block<1, 3>(v, 0) += params.stepSize*(bestVertex - params.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
 			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
-		}
+		//}
 		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
 		}
