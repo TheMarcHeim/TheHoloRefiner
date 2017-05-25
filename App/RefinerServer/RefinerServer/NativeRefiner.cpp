@@ -3,6 +3,12 @@
 #include <iostream>
 #include <igl/Hit.h>
 #include <igl/ray_mesh_intersect.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv/cv.h"
+#include "opencv2\highgui\highgui.hpp"
 
 
 NativeRefiner::NativeRefiner()
@@ -105,7 +111,8 @@ int NativeRefiner::computeVisibility() {
 	}
 
 	progressPrint(1, 1);
-	/*std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
+	std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
+	/*
 	std::ofstream visibilityFile("C:/HappyBirthday/visibility.txt");
 	if (visibilityFile.is_open()) {
 		visibilityFile << visibility;
@@ -173,38 +180,47 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 	p << model.V.block<1, 3>(vertex, 0).transpose();
 	n << model.VN.block<1, 3>(vertex, 0).transpose();
 	p_current = p - n*params.stepSize*params.nStepsDepthSearch/2; // start at negative position along normal
-
+	double correlation;
 	double weight =  images[view1].getViewQuality(p, n, images[view2]);
 	
 	model.nVertexObservations(vertex)+=weight; // needed for averaging
+
+	/* 
+	// for live plotting
+	cv::Mat plot;
+	plot.create(cv::Size(200, params.nStepsDepthSearch), 0);// = cv::Mat::zeros(100, params.nStepsDepthSearch);
+	plot.setTo(255);
+	cv::namedWindow("plot", cv::WINDOW_NORMAL);
+	int temp;
+	*/
+
 
 	for (int i = 0; i < params.nStepsDepthSearch; i++) {
 
 		p_current += params.stepSize*n;
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
-
-		model.adjustmentScores(i, vertex) += weight*images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, params.patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
-
+		correlation = images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, params.patch_size, 0);		//set last argument to zero: calculate with grayscale patches, otherwise with color
+		model.adjustmentScores(i, vertex) += weight*correlation;
 		
 		if (model.nVertexObservations(vertex) > 0.00001) {
 			model.adjustmentScores(i, vertex) /= (model.nVertexObservations(vertex));
 		}
 
-		//if (model.adjustmentScores(i, vertex) != model.adjustmentScores(i, vertex)) {
-		//	std::cout << "nan" << std::endl;
-		//}
+		/*
+		// live plotting
+		temp = (int)(200-correlation * 200);
+		if (temp >= 200) temp = 199;
+		if (temp <= 0) temp = 0;
+		plot.at<uint8_t>(temp, i) = 0;
+		imshow("plot", plot);
+		cv::waitKey(1);
+		*/
 	} 
 }
 
 // This function computes adjustment scores for all vertices and pairs
 int NativeRefiner::computeAdjustmentScores() {
 	// loop through all vertices and images, find pairs and compute 
-
-	// For writing out data
-	std::string pathOut = "C:/HappyBirthday/AdjScrV_";
-	std::string suffixOut = ".txt";
-	int frequency = 100;
-
 	model.adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, model.nVert);
 	model.nVertexObservations = Eigen::VectorXd::Zero(model.nVert);
 
@@ -214,12 +230,16 @@ int NativeRefiner::computeAdjustmentScores() {
 				for (int secondSight = firstSight + 1; secondSight < nImages; secondSight++) {
 					if (visibility(v, secondSight) == 1) {
 						computeVertexAdjustmentScores(v, firstSight, secondSight);
-
 					}
 				}
 			}
 		}
 
+		 // Printing to file
+		/*
+		std::string pathOut = "C:/HappyBirthday/AdjScrV_";
+		std::string suffixOut = ".txt";
+		int frequency = 100;
 		if (v % frequency == 0) {
 
 			std::string nameOut = std::to_string(v);
@@ -232,6 +252,7 @@ int NativeRefiner::computeAdjustmentScores() {
 				AdjScrV.close();
 			}
 		}
+		*/
 
 		// regularization of mesh
 		Eigen::Vector3d midPoint;
@@ -257,8 +278,9 @@ int NativeRefiner::computeAdjustmentScores() {
 		
 		//std::cout << "Adjustment scores for Vertex " << v << " are \n" << model.adjustmentScores.block<51, 1>(0, v) << std::endl << std::endl;
 
+		/*
+		// File print
 		if (v % frequency == 0) {
-
 			std::string nameOut = std::to_string(v);
 			std::ofstream AdjScrV;
 			AdjScrV.open(pathOut + nameOut + suffixOut, std::ios::app);
@@ -269,7 +291,7 @@ int NativeRefiner::computeAdjustmentScores() {
 				AdjScrV.close();
 			}
 		}
-
+		*/
 
 		// print progress
 		if (v % 10 == 0) {
@@ -294,11 +316,11 @@ int NativeRefiner::adjustVertices() {
 				bestVertex = i;
 			}
 		}
-		//if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
+		if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance){//*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
 			model.V.block<1, 3>(v, 0) += params.stepSize*(bestVertex - params.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
 			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
-		//}
+		}
 		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
 		}

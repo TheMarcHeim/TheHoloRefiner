@@ -4,6 +4,8 @@
 #include <vector>
 
 
+
+
 ImageRepresentation::ImageRepresentation(std::string filename,
 	Eigen::Matrix4d pCameraViewTransform,
 	Eigen::Matrix4d pCameraProjectionTransform) {
@@ -231,7 +233,6 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 	cv::namedWindow("patch1", CV_WINDOW_AUTOSIZE);
 	cv::namedWindow("patch2", CV_WINDOW_AUTOSIZE);
 	cv::rectangle(left, patch, cv::Scalar(250, 255, 255), 5, 8, 0);
-	//cv::rectangle(right, cv::Rect(p4_c2.x, p4_c2.y, patch_size.width, patch_size.height), cv::Scalar(250, 255, 255), 5, 8, 0);
 	std::vector< cv::Point> contour;
 	contour.push_back(cv::Point((int)p_c2[0].x, (int)p_c2[0].y));
 	contour.push_back(cv::Point((int)p_c2[2].x, (int)p_c2[2].y));
