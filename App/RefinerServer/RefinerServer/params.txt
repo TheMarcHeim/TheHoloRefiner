@@ -11,6 +11,6 @@ useRGB = 1
 useSubdivision = 0
 maxNimages = 30
 gaussian = 2
-downsample = 0
+downsample = 2
 liveview = 1
 fullnormalize = 1

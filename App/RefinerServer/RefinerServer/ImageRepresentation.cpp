@@ -39,6 +39,8 @@ ImageRepresentation::ImageRepresentation(std::string filename,
 		cv::Size size;
 		size.width = ocvImage.cols / params.downsample;
 		size.height = ocvImage.rows / params.downsample;
+		x_size /= params.downsample;
+		y_size /= params.downsample;
 		cv::Mat newImg;
 		cv::resize(ocvImage, newImg, size);
 		ocvImage = newImg;
