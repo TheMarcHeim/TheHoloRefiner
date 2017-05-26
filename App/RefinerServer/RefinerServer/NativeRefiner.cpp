@@ -87,7 +87,7 @@ void NativeRefiner::testPrj() {
 	Eigen::Vector3d vertInImg = K*vertInCam;
 
 	Eigen::Vector2d rel(vertInImg(0) / vertInImg(2), vertInImg(1) / vertInImg(2));
-	Eigen::Vector2d pix((rel(0) + 1) / 2 * 2048 , (rel(1) + 1) / 2 * 1152);
+	Eigen::Vector2d pix((rel(0) + 1) / 2 * 2048/params.downsample , (rel(1) + 1) / 2 * 1152 / params.downsample);
 
 
 	std::cout << "relative img coords " << "\n" << rel << "\n";
@@ -321,11 +321,11 @@ int NativeRefiner::adjustVertices() {
 				bestVertex = i;
 			}
 		}
-		if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance){//*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
+		//if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance){//*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
 			model.V.block<1, 3>(v, 0) += params.stepSize*(bestVertex - params.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
 			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
-		}
+		//}
 		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
 		}
