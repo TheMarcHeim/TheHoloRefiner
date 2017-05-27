@@ -51,10 +51,10 @@ void loadParams(std::string path, parameters& p, bool verbose) {
 			if (verbose)
 			std::cout << "min_angle_view set to: " << p.min_angle_view << std::endl;
 		}
-		else if (line.find("occlustion_hitpoint_max_distance") != std::string::npos) {
-			sin >> p.occlustion_hitpoint_max_distance;
+		else if (line.find("occlusion_hitpoint_max_distance") != std::string::npos) {
+			sin >> p.occlusion_hitpoint_max_distance;
 			if (verbose)
-			std::cout << "occlustion_hitpoint_max_distance set to: " << p.occlustion_hitpoint_max_distance << std::endl;
+			std::cout << "occlusion_hitpoint_max_distance set to: " << p.occlusion_hitpoint_max_distance << std::endl;
 		}
 		else if (line.find("nRefinementIt") != std::string::npos) {
 			sin >> p.nRefinementIt;
@@ -95,6 +95,11 @@ void loadParams(std::string path, parameters& p, bool verbose) {
 			sin >> p.fullnormalize;
 			if (verbose)
 				std::cout << "fullnormalize set to: " << p.fullnormalize << std::endl;
+		}
+		else if (line.find("subDivFactor") != std::string::npos) {
+			sin >> p.subDivFactor;
+			if (verbose)
+				std::cout << "subDivFactor set to: " << p.subDivFactor << std::endl;
 		}
 		sin.clear();
 	}

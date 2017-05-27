@@ -37,7 +37,7 @@ ModelRepresentation::~ModelRepresentation()
 
 void ModelRepresentation::subDivide()
 {
-	igl::upsample(V, F, 1);
+	igl::upsample(V, F, params.subDivFactor);
 	computeNormals();
 	nTriang = F.rows();
 	nVert = V.rows();

@@ -12,8 +12,9 @@ struct parameters {
 	cv::Size patch_size = cv::Size(9, 9); // size of a patch
 	double smoothing_lambda = 0.005; // weight given to smoothing term
 	double min_angle_view = 0.0; //minimum value of cross product b/w normal and viewing ray
-	double occlustion_hitpoint_max_distance = 0.05; // max distance of hit point in ray casting
+	double occlusion_hitpoint_max_distance = 0.05; // max distance of hit point in ray casting
 	int nRefinementIt = 2;
+	int subDivFactor = 1;
 	int maxNimages = 30;
 	bool useRGB = false;
 	bool useSubdivision = true;

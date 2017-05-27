@@ -160,7 +160,7 @@ bool NativeRefiner::isVisible(int thisVertex, int thisView) {
 		bool hasHit = igl::ray_mesh_intersect<Eigen::Vector3d, Eigen::Vector3d, Eigen::MatrixXd, Eigen::MatrixXi>(C_w, dir, model.V, model.F, hit);
 		
 		//check distance
-		if (hasHit && hit.t < expDist - params.occlustion_hitpoint_max_distance)
+		if (hasHit && hit.t < expDist - params.occlusion_hitpoint_max_distance)
 		{
 			visible = false;
 		}
@@ -321,11 +321,11 @@ int NativeRefiner::adjustVertices() {
 				bestVertex = i;
 			}
 		}
-		//if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance){//*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
+		if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance){//*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
 			model.V.block<1, 3>(v, 0) += params.stepSize*(bestVertex - params.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
 			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
-		//}
+		}
 		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
 		}
