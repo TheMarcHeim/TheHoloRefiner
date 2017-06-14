@@ -71,9 +71,7 @@ int main()
 	Eigen::Matrix4d extrinsic;
 	int index = 0;
 
-
-
-	// loading model
+	// choose model to load by uncommenting
 	//refiner.addInitModel(params.path + "sofa.obj");
 	//refiner.addInitModel(params.path + "spatialMap_part.obj");
 	//refiner.addInitModel(params.path + "pureBuildupSofaConnected.obj"); 

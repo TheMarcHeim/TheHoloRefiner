@@ -250,9 +250,9 @@ double ImageRepresentation::computeDistortedPatchCorrelation(ImageRepresentation
 		}
 
 
-		cv::matchTemplate(patch1BRG[0], patch2BRG[0], correlationMat[0], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Blue channel
-		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Red channel
-		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCORR_NORMED);		//Green channel
+		cv::matchTemplate(patch1BRG[0], patch2BRG[0], correlationMat[0], cv::TemplateMatchModes::TM_CCOEFF_NORMED);		//Blue channel
+		cv::matchTemplate(patch1BRG[1], patch2BRG[1], correlationMat[1], cv::TemplateMatchModes::TM_CCOEFF_NORMED);		//Red channel
+		cv::matchTemplate(patch1BRG[2], patch2BRG[2], correlationMat[2], cv::TemplateMatchModes::TM_CCOEFF_NORMED);		//Green channel
 
 		//V1: Mean
 		//correlation = (correlationMat[0].at<float>(0, 0) + correlationMat[1].at<float>(0, 0) + correlationMat [2].at<float>(0, 0)) / 3.0;
@@ -359,7 +359,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 
 	// display images and patches, print stuff
 	
-	cv::Mat left = img_c1.clone();
+	/*cv::Mat left = img_c1.clone();
 	cv::Mat right = img_c2.clone();
 	std::cout << "Correlation is: " << correlation.at<double>(0, 0) << std::endl;
 	cv::namedWindow("img1", cv::WINDOW_NORMAL);
@@ -376,7 +376,7 @@ double ImageRepresentation::computePatchCorrelation(ImageRepresentation& image2,
 	cv::imshow("patch2", patch2);
 	cv::waitKey(1);
 	
-	
+	*/
 	return correlation.at<double>(0, 0);
 }
 

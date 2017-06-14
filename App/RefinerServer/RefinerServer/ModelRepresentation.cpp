@@ -20,15 +20,14 @@ ModelRepresentation::ModelRepresentation()
 							  0, 0, 1, 1.3061,
 							  0, 1, 0, -0.02,
 								  0, 0, 0, 1;
-
+	
 
 	// happy birthday ground truth
-	/*
-	modelToWorldTransform << -1, 0, 0, -1.2379,
+	
+	/*modelToWorldTransform << -1, 0, 0, -1.2379,
 							  0, 0, 1, 1.2861,
 							  0, 1, 0, -0.06,
-							  0, 0, 0, 1;
-*/
+							  0, 0, 0, 1;*/
 }
 
 ModelRepresentation::~ModelRepresentation()
