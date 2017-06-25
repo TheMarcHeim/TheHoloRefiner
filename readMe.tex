@@ -1,0 +1,101 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{latexsym}
+\setcounter{page}{1}
+\usepackage{geometry}
+\usepackage{longtable}
+
+\begin{document}
+\textwidth = 20cm
+\title{Detailed Object Reconstruction Using HoloLens - ReadMe}
+\author{Nico van Duijn, Marc Heim, David Rohr\\
+Supervisor: Torsten Sattler\\
+ETH Zurich\\}
+\date{}
+\maketitle
+
+\section{Code Structure}
+To Do: What is where and how to execute 
+
+\section{Source Files}
+The following source files have been written by our own, all other files required to run the HoloRefiner are open-source and originate from external sources.
+
+\begin{center}
+\begin{tabular}{p{3.5cm}p{10cm}}
+\renewcommand{\arraystretch}{1.5}
+File & Function\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+RefinerServer.cpp & Entry point. Contains main function, which coordinates the entire pipeline. Loads initial mesh together with images and in- and extrinsics. Passes the loaded data to a new instance of the NativeRefiner class and starts the refinement.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+NativeRefiner.cpp & Class defining an entire refinement task. A NativeRefiner object contains the mesh, the images plus in- and extrinsics. It is able to perform all the necessary operations on the data, starting from the method NativeRefiner::refine().\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+ImageRepresentation.cpp & All images are represented by objects of the ImageRepresentation class, which contains the image and the corresponding camera in- \& extrinsics. The class features methods to project points between 2D \& 3D, to compute the correlation between patches etc.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+ModelRepresentation.cpp & Class containing the mesh to be refined. Features basic methods on mesh subdivision, normals recomputation etc.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+readParams.cpp & Function to load and parse the parameter file (see below).
+
+\end{tabular}
+\end{center}
+
+\section{Parameter File}
+In order to not recompile the code every time a new parameter setting is to be used, we read in the parameter values via an external parameter file, named ‘params.txt’. The file needs to be stored in the working folder of the HoloRefiner. The parameters in this file are briefly introduced below:
+
+%\begin{center}
+\begin{longtable}{p{0.5cm}p{4.5cm}p{8.5cm}}
+
+Nr. & Parameter and typical value & Meaning/Effect \\ \noalign{\smallskip}\hline 
+\endhead
+%\hline
+\endfoot
+\noalign{\smallskip}
+
+p1 & path = C:/HappyBirthday/ & Absolute path to folder where the initial mesh is stored together with the images and the files containing the corresponding camera in-and extrinsics.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p2 & nStepsDepthSearch = 51 & Number of vertex displacement steps along the surface normals.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p3 & stepSize = 0.0015 & Search resolution/step size in meters defining vertex displacement distances. The product of p2 and p3 defines the search region within which the optimal vertex position should lie.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p4 & refineTolerance = 0.05 & We only adjust a vertex if it the adjustment score at the new position is larger or equal to the specified value.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p5 & patch\_size = 20 & Size of square patch defined around a vertex. This patch is correlated with the corresponding patches in other views to determine the adjustment score of a vertex position.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p6 & smoothing\_lambda = 0 & Regularization weight. It favors vertex displacements towards adjacent vertices. The larger it is chosen, the smoother the refinement result.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p7 & min\_angle\_view = 0.5 & Scalar used when determining whether a vertex should be considered in a given image. If the dot product between the negative normalized viewing ray vector and the surface normal at the vertex position is larger than the value of this parameter, the vertex is considered visible in the image.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p8 & occlusion\_hitpoint\_max\_distance = 0.05 & Tolerance in meter used when determining if a vertex is occluded and thus not visible in a given image. If the viewing ray from the camera to the vertex hits the mesh before arriving at the vertex, the vertex is considered occluded if its distance to the first hit-point is larger than the specified value.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p9 & nRefinementIt = 3 & Number of refinement iterations. At every iteration, the vertex positions are adapted if necessary. Ideally, one iteration should suffice, however, since the surface normals are not accurate enough, we chose multiple iterations. This allows the surface normals to adopt as well, since they are recomputed after adjusting the vertices. Given our parameter settings, the percentage of vertex adjustments decreases after three iterations to a value where we consider the refinement to be converged.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p10 & useRGB = 1 & Choose to either use color images or grayscale images to compute the adjustment score.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p11 & useSubdivision = 0 & Choose to subdivide the mesh obtained by HoloLens. This is used since the mesh by HoloLens is very coarse and more vertices are required get an accurate refinement.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p12 & subDivFactor = 1 & Factor which defines how many times the triangles of the HoloLens’ mesh are subdivided. Only active if p11 is set to 1.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p13 & maxNimages = 30 & Use this factor to limit the number of views used for refinement (introduced for debugging purposes).\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p14 & gaussian = 2 & Gaussian window parameter used to smooth the captured images before using them for the refinement process.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p15 & downsample = 1 & Downsampling factor to be applied to the captured images. Can be used in combination with p5 to increase computational speed while keeping the relative patch size constant, and vice versa.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p16 & liveview = 0 & Dis- or enables live view of the refinement process. Displays current view pairs, the patches moving with the vertices and the current adjustment score.\\ \noalign{\smallskip} \hline \noalign{\smallskip}
+
+p17 & fullnormalize = 1 & Used to choose between non-modified and normalized image patches for computing the adjustment scores. Currently it has no effect, since the correlation method chosen \\ \noalign{\smallskip} 
+\end{longtable}
+%\end{center}
+
+
+
+\end{document}
+
+
+
+
