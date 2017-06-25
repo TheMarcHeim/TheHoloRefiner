@@ -8,11 +8,13 @@ ModelRepresentation::ModelRepresentation()
 
 	loadParams("params.txt", params);
 
-	
-	/*modelToWorldTransform << 0, 0, 1, 0.02,
+// manually added adjustment for sofa dataset
+	/*
+	modelToWorldTransform << 0, 0, 1, 0.02,
 							 1, 0, 0, 0.19,
 							 0, 1, 0, -0.06,
-							 0, 0, 0, 1; // sofa dataset*/
+							 0, 0, 0, 1; 
+							 */
 
 
 	// happy birthday dataset capture 1

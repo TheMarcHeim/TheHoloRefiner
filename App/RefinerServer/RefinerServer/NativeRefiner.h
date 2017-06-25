@@ -7,7 +7,7 @@
 #include <Eigen/StdVector>
 #include <iostream>
 #include "readParams.h"
-//#include <igl/viewer/Viewer.h> didn't work until now
+
 
 
 	class NativeRefiner
@@ -80,13 +80,13 @@
 		int computeAdjustmentScores();
 
 		/// <summary>
-		/// Function to compute adjustment scores for all pairs
+		/// Function to adjust vertices based on adjustment scores
 		/// </summary>
 		int adjustVertices();
 
 
 		/// <summary>
-		/// Function to print progress to Console
+		/// Function to print progress to console
 		/// </summary>
 		void progressPrint(int n, int m);
 

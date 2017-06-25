@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iostream>
 
-
+// function loading the parameter file and storing them
 void loadParams(std::string path, parameters& p, bool verbose) {
 	std::ifstream fin(path);
 	std::string line;

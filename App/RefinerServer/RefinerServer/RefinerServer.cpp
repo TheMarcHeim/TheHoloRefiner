@@ -15,7 +15,7 @@
 #include <Windows.h>
 #include "readParams.h"
 
-
+// function to parse the matrix files into intrinsic and extrinsic calibration matrices
 void loadMats(Eigen::Matrix4d& f, Eigen::Matrix4d& s, std::string path) {
 
 	std::fstream file(path);

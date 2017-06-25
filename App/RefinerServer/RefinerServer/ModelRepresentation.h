@@ -51,9 +51,6 @@ class ModelRepresentation
 		
 		int nTriang;
 		int nVert;
-		//int nStepsDepthSearch;
-		//double stepSize;
-		//double refineTolerance;
 		parameters params;
 
 		Eigen::MatrixXd V; //vertices

@@ -42,7 +42,7 @@ void NativeRefiner::saveRefinedModel(std::string path)
 std::string NativeRefiner::refine(int nReps)
 {
 
-	int nAdj;
+	int nAdj; // number of adjusted vertices
 
 	if(params.useSubdivision)
 		model.subDivide();	
@@ -55,12 +55,6 @@ std::string NativeRefiner::refine(int nReps)
 		std::cout << "Adjusting vertices..." << std::endl;
 		nAdj = adjustVertices();
 		
-		// save intermediate refinement steps...
-		/*if (i < nReps - 1) {
-			std::string path = "C:/HappyBirthday/intermediates/";
-			std::string name = "sofa_refined_intermediate" + std::to_string(i+1) + ".obj";
-			saveRefinedModel(params.path + name);
-		}*/
 	}
 	return "done";
 
@@ -240,25 +234,6 @@ int NativeRefiner::computeAdjustmentScores() {
 			}
 		}
 
-		 // Printing to file
-		/*
-		std::string pathOut = "C:/HappyBirthday/AdjScrV_";
-		std::string suffixOut = ".txt";
-		int frequency = 100;
-		if (v % frequency == 0) {
-
-			std::string nameOut = std::to_string(v);
-			std::ofstream AdjScrV;
-			AdjScrV.open(pathOut + nameOut + suffixOut, std::ios::app);
-
-			if (AdjScrV.is_open()) {
-				AdjScrV << "Adjustment scores without regularization" << std::endl;
-				AdjScrV << model.adjustmentScores.col(v) << std::endl;
-				AdjScrV.close();
-			}
-		}
-		*/
-
 		// regularization of mesh
 		Eigen::Vector3d midPoint;
 		bool isInside = model.computeCenter(v, midPoint);
@@ -270,34 +245,13 @@ int NativeRefiner::computeAdjustmentScores() {
 		midPoint = 0.66*midPoint + 0.34*p;
 
 		Eigen::Vector3d dtmp = midPoint - p;
-		//std::cout << "Dist for Vertex " << v << ": "<< dtmp.norm()<< std::endl;	
 
 		for (int i = 0; i < params.nStepsDepthSearch; i++) {
 			p_current += params.stepSize*n;
 			dtmp = midPoint - p_current;
-			//std::cout << model.adjustmentScores(i, v);
 			model.adjustmentScores(i, v) -= (isInside ? dtmp.squaredNorm()*params.smoothing_lambda : 0);
-			//std::cout <<"/"<< model.adjustmentScores(i, v) << std::endl;
-			//std::cout << (isInside ? dtmp.squaredNorm()*lambda : 0) << std::endl;
 		}
 		
-		//std::cout << "Adjustment scores for Vertex " << v << " are \n" << model.adjustmentScores.block<51, 1>(0, v) << std::endl << std::endl;
-
-		/*
-		// File print
-		if (v % frequency == 0) {
-			std::string nameOut = std::to_string(v);
-			std::ofstream AdjScrV;
-			AdjScrV.open(pathOut + nameOut + suffixOut, std::ios::app);
-
-			if (AdjScrV.is_open()) {
-				AdjScrV << "Adjustment scores with regularization" << std::endl;
-				AdjScrV << model.adjustmentScores.col(v) << std::endl;
-				AdjScrV.close();
-			}
-		}
-		*/
-
 		// print progress
 		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
@@ -321,10 +275,11 @@ int NativeRefiner::adjustVertices() {
 				bestVertex = i;
 			}
 		}
-		if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance){//*pow(abs(bestVertex - params.nStepsDepthSearch) / 2, 1.2)) {
+
+		// adjust vertex
+		if (bestScore > model.adjustmentScores(params.nStepsDepthSearch / 2, v) + params.refineTolerance){
 			model.V.block<1, 3>(v, 0) += params.stepSize*(bestVertex - params.nStepsDepthSearch / 2)*model.VN.block<1, 3>(v, 0);
 			nAdj++;
-			//std::cout << "adjusted Vertex " << v << " by " << (bestVertex - model.nStepsDepthSearch / 2) << std::endl;
 		}
 		if (v % 10 == 0) {
 			progressPrint(v, model.nVert);
