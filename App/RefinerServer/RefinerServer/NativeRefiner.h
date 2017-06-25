@@ -8,8 +8,6 @@
 #include <iostream>
 #include "readParams.h"
 
-
-
 	class NativeRefiner
 	{
 	public:
@@ -49,14 +47,10 @@
 		int getSize();
 
 		/// <summary>
-		/// number of images
+		/// return number of images loaded
 		/// </summary>
 		int getNImages();
 
-		/// <summary>
-		/// test projection
-		/// </summary>
-		void testPrj();
 
 		/// <summary>
 		/// Function that computes which vertices are visible from which cameras. 

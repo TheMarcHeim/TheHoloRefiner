@@ -68,27 +68,6 @@ int NativeRefiner::getNImages() {
 	return images.size();
 }
 
-void NativeRefiner::testPrj() {
-
-	Eigen::Vector3d worldPoint(-2.8, 0.0, -1.4);
-	int thisView = 1;
-
-	Eigen::Vector3d C_w = images[thisView].CameraViewTransform.block<3, 1>(0, 3).cast <double>();						// camera center in world frame
-	Eigen::Matrix<double, 3, 3> R_wc = images[thisView].CameraViewTransform.block<3, 3>(0, 0).cast <double>();			// camera orientation matrix (camera to world)	
-	Eigen::Matrix<double, 3, 3> K = images[thisView].CameraProjectionTransform.block<3, 3>(0, 0).cast <double>();
-
-	Eigen::Vector3d vertInCam = R_wc.transpose()*(worldPoint - C_w);													// ... in camera frame
-	Eigen::Vector3d vertInImg = K*vertInCam;
-
-	Eigen::Vector2d rel(vertInImg(0) / vertInImg(2), vertInImg(1) / vertInImg(2));
-	Eigen::Vector2d pix((rel(0) + 1) / 2 * 2048/params.downsample , (rel(1) + 1) / 2 * 1152 / params.downsample);
-
-
-	std::cout << "relative img coords " << "\n" << rel << "\n";
-	std::cout << "pixel coords " << "\n" << pix << "\n";
-
-}
-
 int NativeRefiner::computeVisibility() {
 	visibility = Eigen::MatrixXi::Zero(model.nVert, nImages);		//Binary matrix indicating if a vertex v is seen in image i, rows: vertices, columns: images 
 	int nVis = 0;
@@ -106,12 +85,6 @@ int NativeRefiner::computeVisibility() {
 
 	progressPrint(1, 1);
 	std::cout << "\nfinished computing visibility. number of visible vertices: " << nVis << std::endl;
-	/*
-	std::ofstream visibilityFile("C:/HappyBirthday/visibility.txt");
-	if (visibilityFile.is_open()) {
-		visibilityFile << visibility;
-		visibilityFile.close();
-	}*/
 	return nVis;
 }
 
@@ -188,11 +161,9 @@ void NativeRefiner::computeVertexAdjustmentScores(int vertex, int view1, int vie
 		cv::namedWindow("plot", cv::WINDOW_NORMAL);
 	}
 	
+	for (int i = 0; i < params.nStepsDepthSearch; i++) { // loop through all candidate vertices
 
-
-	for (int i = 0; i < params.nStepsDepthSearch; i++) {
-
-		p_current += params.stepSize*n;
+		p_current += params.stepSize*n; // current vertex
 		model.adjustmentScores(i, vertex) *= (model.nVertexObservations(vertex)-weight);
 		correlation = images[view2].computeDistortedPatchCorrelation(images[view1], n, p_current, params.patch_size, (params.useRGB?1:0));		//set last argument to zero: calculate with grayscale patches, otherwise with color
 		model.adjustmentScores(i, vertex) += weight*correlation;
@@ -223,11 +194,11 @@ int NativeRefiner::computeAdjustmentScores() {
 	model.adjustmentScores = Eigen::MatrixXd::Zero(params.nStepsDepthSearch, model.nVert);
 	model.nVertexObservations = Eigen::VectorXd::Zero(model.nVert);
 
-	for (int v = 0; v < model.nVert; v++) {
-		for (int firstSight = 0; firstSight < nImages; firstSight++) {
-			if (visibility(v, firstSight) == 1 && firstSight < nImages - 1) {
-				for (int secondSight = firstSight + 1; secondSight < nImages; secondSight++) {
-					if (visibility(v, secondSight) == 1) {
+	for (int v = 0; v < model.nVert; v++) { // loop through all vertices
+		for (int firstSight = 0; firstSight < nImages; firstSight++) { // loop through all images
+			if (visibility(v, firstSight) == 1 && firstSight < nImages - 1) {// if current vertex is visible
+				for (int secondSight = firstSight + 1; secondSight < nImages; secondSight++) { //loop though all other images
+					if (visibility(v, secondSight) == 1) { // find all other images in which vertex is visible
 						computeVertexAdjustmentScores(v, firstSight, secondSight);
 					}
 				}
